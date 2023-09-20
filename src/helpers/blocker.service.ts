@@ -12,8 +12,6 @@ export class BlockerService {
     ): Promise<boolean> {
         const isBlocked = await this.cacheManager.get<boolean>(key);
 
-        console.log('isBlocked ', isBlocked)
-
         if (isBlocked) {
             return true;
         }

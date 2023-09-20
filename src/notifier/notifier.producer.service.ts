@@ -1,31 +1,31 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { UserRepository } from "../user/user.repository";
 import { ClientKafka } from "@nestjs/microservices";
-import { BlockerService } from "src/helpers/blocker.service";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class NotifierProducerService {
+  private readonly logger = new Logger(NotifierProducerService.name);
+
   constructor(
     private userRepository: UserRepository,
     @Inject('NOTIFIER_SERVICE') private client: ClientKafka,
-    private blockerService: BlockerService,
+    private configService: ConfigService
   ) { }
 
   @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
-    const isBlocked = await this.blockerService.block('NotifierProducerService', 60);
-
-    if (isBlocked)
+    if (!this.configService.get('HIDDEN')) {
       return;
+    }
 
     const users = await this.userRepository.find({ monitor: true });
-    console.log('users', users)
+
+    this.logger.log('Notify users', users.map(user => user.id));
 
     for (const user of users) {
       this.client.emit('cars_notification', user);
     }
-
-    await this.blockerService.unblock('NotifierProducerService')
   }
 }

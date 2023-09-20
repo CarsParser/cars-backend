@@ -1,12 +1,19 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { ValidationPipe } from "@nestjs/common";
+import { LogLevel, ValidationPipe } from "@nestjs/common";
 import { Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const logLevel: LogLevel[] = ['log', 'error', 'warn'];
+
+  if (process.env.DEBUG) {
+    logLevel.push('debug');
+  }
+  const app = await NestFactory.create(AppModule, {
+    logger: logLevel,
+  });
   const configService = app.get<ConfigService>(ConfigService);
 
   app.useGlobalPipes(new ValidationPipe());
