@@ -9,6 +9,7 @@ export class AvitoRepository extends PlatformRepository {
   }
 
   async find(params: IFindParams): Promise<Car[]> {
+    params;
     return [
       {
         price: 1_000_000,
