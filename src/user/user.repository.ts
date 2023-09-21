@@ -1,8 +1,8 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { UserDTO, UserUpdateDTO } from "./dto/user.dto";
-import { InjectModel } from "@nestjs/mongoose";
-import { User } from "./user.entity";
-import { Model } from "mongoose";
+import { Injectable, Logger } from '@nestjs/common';
+import { UserDTO, UserUpdateDTO } from './dto/user.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from './user.entity';
+import { Model } from 'mongoose';
 
 interface IFindParams {
   monitor: boolean;
@@ -12,10 +12,10 @@ interface IFindParams {
 export class UserRepository {
   private readonly logger = new Logger(UserRepository.name);
 
-  constructor(@InjectModel(User.name) private userModel: Model<User>) { }
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async find(params: IFindParams): Promise<UserDTO[]> {
-    const users = await this.userModel.find(params).lean() as UserDTO[];
+  async find(params: IFindParams): Promise<User[]> {
+    const users = (await this.userModel.find(params).lean()) as User[];
 
     this.logger.debug('Users found', users);
 

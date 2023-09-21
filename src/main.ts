@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { LogLevel, ValidationPipe } from "@nestjs/common";
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { LogLevel, ValidationPipe } from '@nestjs/common';
 import { Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 
@@ -17,16 +17,18 @@ async function bootstrap() {
   const configService = app.get<ConfigService>(ConfigService);
 
   app.useGlobalPipes(new ValidationPipe());
-  app.connectMicroservice(
-    {
-      transport: Transport.KAFKA,
-      options: {
-        client: {
-          brokers: [`${configService.get('KAFKA_HOST')}:${configService.get('KAFKA_PORT')}`],
-        }
-      }
-    }
-  );
+  app.connectMicroservice({
+    transport: Transport.KAFKA,
+    options: {
+      client: {
+        brokers: [
+          `${configService.get('KAFKA_HOST')}:${configService.get(
+            'KAFKA_PORT',
+          )}`,
+        ],
+      },
+    },
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Cars parser')
