@@ -1,10 +1,18 @@
 import { Module } from '@nestjs/common';
-import { AvitoModule } from './avito/avito.module';
-import { PlatformsFactory } from './platforms.factory';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Platform, PlatformSchema } from './platform.entity';
+import { PlatformService } from './platform.service';
+import { PlatformRepository } from './platform.repository';
+import { PlatformController } from './plarform.controller';
 
 @Module({
-  imports: [AvitoModule],
-  providers: [PlatformsFactory],
-  exports: [PlatformsFactory],
+  imports: [
+    MongooseModule.forFeature([
+      { name: Platform.name, schema: PlatformSchema },
+    ]),
+  ],
+  controllers: [PlatformController],
+  providers: [PlatformService, PlatformRepository],
+  exports: [PlatformRepository],
 })
 export class PlatformsModule {}

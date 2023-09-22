@@ -39,7 +39,7 @@ import { CarModule } from 'src/car/car.module';
                 },
             },
             client: {
-              clientId: 'notifier',
+              clientId: 'cars',
               brokers: [
                 `${configService.get('KAFKA_HOST')}:${configService.get(
                   'KAFKA_PORT',

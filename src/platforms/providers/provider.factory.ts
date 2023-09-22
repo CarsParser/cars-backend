@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { AvitoRepository } from './avito/avito.repository';
-import { PlatformRepository } from './platform.repository';
+import { ProviderRepository } from './provider.repository';
 import { Platform } from 'src/common';
 
 @Injectable()
-export class PlatformsFactory {
+export class ProviderFactory {
   constructor(private avitoRepository: AvitoRepository) {}
 
-  create(platform: Platform): PlatformRepository {
+  create(platform: Platform): ProviderRepository {
     switch (platform) {
       case Platform.avito: {
         return this.avitoRepository;

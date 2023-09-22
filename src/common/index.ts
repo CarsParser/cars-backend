@@ -42,3 +42,9 @@ export enum EngineType {
   hybrid = 'hybrid',
   electric = 'electric',
 }
+
+export interface SearchCarsData {
+  platform: Platform;
+  city: City;
+  lastProcessedRecordTimestamp: string;
+}

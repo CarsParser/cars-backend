@@ -1,12 +1,12 @@
-import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Post, Put } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserDTO, UserUpdateDTO } from './dto/user.dto';
 
-@ApiTags('users')
+@ApiTags('user')
 @ApiResponse({
   status: 201,
-  description: 'The user has been successfully created.',
+  description: 'Success',
 })
 @ApiResponse({ status: 500, description: 'Internal server error.' })
 @Controller('user')
@@ -16,14 +16,14 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @ApiBody({ type: UserDTO })
-  @Post('create')
+  @Post()
   async create(@Body() userCreate: UserDTO) {
     this.logger.debug('Create user', userCreate);
     return this.userService.create(userCreate);
   }
 
   @ApiBody({ type: UserUpdateDTO })
-  @Post('update')
+  @Put()
   async update(@Body() userUpdate: UserUpdateDTO) {
     this.logger.debug('Update user', userUpdate);
     return this.userService.update(userUpdate);
