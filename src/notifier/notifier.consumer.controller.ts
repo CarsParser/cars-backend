@@ -16,20 +16,26 @@ export class NotifierConsumerController {
   @EventPattern('cars_notification', Transport.KAFKA)
   async handleCarsNotifications(user: User) {
     const blockKey = `notify_${user.id}`;
-    const isBlocked = await this.blockerService.block(blockKey, 2 * 60);
-    if (isBlocked) {
-      this.logger.log(`Cars notifications blocked userId ${user.id}`);
-      return;
+
+    try {
+      const isBlocked = await this.blockerService.block(blockKey, 2 * 60);
+      if (isBlocked) {
+        this.logger.log(`Cars notifications blocked userId ${user.id}`);
+        return;
+      }
+
+      this.logger.debug('Notify user', user);
+
+      const carsToOffer = await this.carsRepository.find(user.config);
+
+      this.logger.debug(`Found cars for user ${user.id}`, carsToOffer);
+
+      // TODO: send to bot
+    } catch (err) {
+      this.logger.error(`Unable to notify user ${user.id} about new cars`, err);
+      throw err;
+    } finally {
+      await this.blockerService.unblock(blockKey);
     }
-
-    this.logger.debug('Notify user', user);
-
-    const carsToOffer = await this.carsRepository.find(user.config);
-
-    this.logger.debug(`Found cars for user ${user.id}`, carsToOffer);
-
-    // TODO: send to bot
-
-    await this.blockerService.unblock(blockKey);
   }
 }

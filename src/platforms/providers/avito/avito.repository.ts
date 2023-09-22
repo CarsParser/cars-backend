@@ -20,11 +20,24 @@ export class AvitoRepository extends ProviderRepository {
 
     this.logger.debug('Proxy', proxy);
 
-    await this.proxyRepository.add(proxy);
-    params;
-    return {
-      cars: [],
-      lastProcessedRecordTimestamp: new Date().toISOString(),
-    };
+    try {
+      const proxy = await this.proxyRepository.get();
+
+      this.logger.debug('Proxy', proxy);
+
+      params;
+      return {
+        cars: [],
+        lastProcessedRecordTimestamp: new Date().toISOString(),
+      };
+    } catch (err) {
+      this.logger.error(
+        `Unable to find cars for platform ${params.platform} city ${params.city}`,
+        err,
+      );
+      throw err;
+    } finally {
+      await this.proxyRepository.add(proxy);
+    }
   }
 }
