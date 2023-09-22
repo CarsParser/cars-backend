@@ -13,4 +13,8 @@ export class ProxyService {
   async find() {
     return this.proxyRepository.find();
   }
+
+  async delete(proxy: ProxyDTO) {
+    return this.proxyRepository.delete(proxy);
+  }
 }

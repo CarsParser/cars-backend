@@ -21,10 +21,6 @@ export class AvitoRepository extends ProviderRepository {
     this.logger.debug('Proxy', proxy);
 
     try {
-      const proxy = await this.proxyRepository.get();
-
-      this.logger.debug('Proxy', proxy);
-
       params;
       return {
         cars: [],

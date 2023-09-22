@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post } from '@nestjs/common';
 import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProxyDTO } from './dto/proxy.dto';
 import { ProxyService } from './proxy.service';
@@ -22,5 +22,11 @@ export class ProxyController {
   @Get()
   async find() {
     return this.proxyService.find();
+  }
+
+  @ApiBody({ type: ProxyDTO })
+  @Delete()
+  async delete(@Body() proxy: ProxyDTO) {
+    return this.proxyService.delete(proxy);
   }
 }
