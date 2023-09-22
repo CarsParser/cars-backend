@@ -5,27 +5,14 @@ import { UserModule } from './user/user.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotifierModule } from './notifier/notifier.module';
 import { PlatformsModule } from './platforms/platforms.module';
-import { RedisClientOptions } from 'redis';
-import { redisStore } from 'cache-manager-redis-yet';
-import { CacheModule } from '@nestjs/cache-manager';
 import { CarModule } from './car/car.module';
+import { RedisModule } from './libs/redis.module';
+import { ProxyModule } from './proxy/proxy.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    CacheModule.registerAsync<RedisClientOptions>({
-      isGlobal: true,
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => ({
-        store: await redisStore({
-          socket: {
-            host: configService.get('REDIS_HOST'),
-            port: parseInt(configService.get('REDIS_PORT') || '6379'),
-          },
-        }),
-      }),
-    }),
+    RedisModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -42,6 +29,7 @@ import { CarModule } from './car/car.module';
     NotifierModule,
     PlatformsModule,
     CarModule,
+    ProxyModule,
   ],
 })
 export class AppModule {}

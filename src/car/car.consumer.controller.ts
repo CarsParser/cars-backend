@@ -20,7 +20,7 @@ export class CarConsumerController {
   @EventPattern('load_cars', Transport.KAFKA)
   async handleCarsNotifications(data: SearchCarsData) {
     const blockKey = `load_cars_${data.platform}_${data.city}`;
-    const isBlocked = await this.blockerService.block(blockKey, 2 * 60 * 1000);
+    const isBlocked = await this.blockerService.block(blockKey, 2 * 60);
     if (isBlocked) {
       this.logger.log(
         `Load cars blocked platform ${data.platform} city ${data.city}`,

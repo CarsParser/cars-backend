@@ -1,17 +1,16 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import Redis from 'ioredis';
 
 @Injectable()
 export class BlockerService {
   private readonly logger = new Logger(BlockerService.name);
 
-  constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {}
+  constructor(@Inject('REDIS') private redis: Redis) {}
 
   public async block(key: string, ttl: number): Promise<boolean> {
     this.logger.debug(`Block ${key}`);
 
-    const isBlocked = await this.cacheManager.get<boolean>(key);
+    const isBlocked = await this.redis.get(key);
 
     if (isBlocked) {
       this.logger.debug(`Is blocked ${key}`);
@@ -20,13 +19,13 @@ export class BlockerService {
 
     this.logger.debug(`Not blocker ${key}`);
 
-    await this.cacheManager.set(key, true, ttl);
+    await this.redis.set(key, 1, 'EX', ttl);
 
     return false;
   }
 
   public async unblock(key: string) {
     this.logger.debug(`Unblock ${key}`);
-    await this.cacheManager.del(key);
+    await this.redis.del(key);
   }
 }

@@ -16,7 +16,7 @@ export class NotifierConsumerController {
   @EventPattern('cars_notification', Transport.KAFKA)
   async handleCarsNotifications(user: User) {
     const blockKey = `notify_${user.id}`;
-    const isBlocked = await this.blockerService.block(blockKey, 2 * 60 * 1000);
+    const isBlocked = await this.blockerService.block(blockKey, 2 * 60);
     if (isBlocked) {
       this.logger.log(`Cars notifications blocked userId ${user.id}`);
       return;
