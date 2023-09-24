@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AvitoRepository } from './avito.repository';
-import { HttpModule } from '@nestjs/axios';
 import { ProxyModule } from 'src/proxy/proxy.module';
+import { ConfigModule } from '@nestjs/config';
+import { AvitoParserService } from './avito.parse.service';
 
 @Module({
-  imports: [HttpModule, ProxyModule],
-  providers: [AvitoRepository],
+  imports: [ProxyModule, ConfigModule],
+  providers: [AvitoRepository, AvitoParserService],
   exports: [AvitoRepository],
 })
 export class AvitoModule {}

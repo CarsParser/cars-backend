@@ -1,15 +1,22 @@
+import { Car } from 'src/car/car.entity';
+
 export enum Platform {
   avito = 'avito',
 }
 
 export enum City {
   spb = 'spb',
-  msk = 'msk',
+  // msk = 'msk',
+  // samara = 'samara',
+  // ekb = 'ekb',
+  // arkh = 'arkh',
+  // rostov = 'rostov',
+  // omsk = 'omsk',
+  // kazan = 'kazan',
 }
 
 export enum Transmission {
   auto = 'auto',
-  akpp = 'akpp',
   robot = 'robot',
   vary = 'vary',
   mechanic = 'mechanic',
@@ -46,5 +53,5 @@ export enum EngineType {
 export interface SearchCarsData {
   platform: Platform;
   city: City;
-  lastProcessedRecordTimestamp: string;
+  lastProcessedCars: Car[];
 }

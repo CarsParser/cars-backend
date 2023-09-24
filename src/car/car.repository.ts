@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Car } from './car.entity';
 import { Model } from 'mongoose';
 import { User } from 'src/user/user.entity';
+import { City, Platform } from 'src/common';
 
 @Injectable()
 export class CarRepository {
@@ -88,5 +89,32 @@ export class CarRepository {
     this.logger.debug('Found cars', cars);
 
     return cars;
+  }
+
+  async findLastProcessedCars(city: City, platform: Platform): Promise<Car[]> {
+    const lastCar = await this.carModel
+      .findOne({ city, platform })
+      .sort({ postedAt: -1 })
+      .select({ postedAt: 1 })
+      .limit(1)
+      .lean();
+
+    if (!lastCar) {
+      return [];
+    }
+
+    this.logger.debug(
+      `City ${city} platform ${platform} last posted at ${lastCar.postedAt.toISOString()}`,
+    );
+
+    const lastProcessedCars = await this.carModel
+      .find({ postedAt: lastCar.postedAt })
+      .lean();
+
+    this.logger.debug(`City ${city} platform ${platform}`, {
+      lastProcessedCars,
+    });
+
+    return lastProcessedCars;
   }
 }

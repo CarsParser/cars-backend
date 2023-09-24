@@ -3,7 +3,6 @@ import { SearchCarsData } from 'src/common';
 
 export interface FindResponse {
   cars: Car[];
-  lastProcessedRecordTimestamp: string;
 }
 
 export abstract class ProviderRepository {

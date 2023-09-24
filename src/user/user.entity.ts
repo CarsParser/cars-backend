@@ -103,7 +103,7 @@ export class Config {
 
   @Prop({
     required: true,
-    default: [Transmission.akpp],
+    default: [Transmission.auto],
     type: () => [Transmission],
   })
   transmissions: Transmission[];

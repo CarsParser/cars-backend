@@ -1,10 +1,14 @@
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Transport } from '@nestjs/microservices';
-import { SearchCarsData } from 'src/common';
+import { City, Platform } from 'src/common';
 import { ProviderFactory } from 'src/platforms/providers/provider.factory';
 import { CarRepository } from './car.repository';
-import { PlatformRepository } from 'src/platforms/platform.repository';
 import { BlockerService } from 'src/helpers/blocker.service';
+
+export interface Data {
+  platform: Platform;
+  city: City;
+}
 
 @Controller('car-consumer')
 export class CarConsumerController {
@@ -13,16 +17,15 @@ export class CarConsumerController {
   constructor(
     private providerFactory: ProviderFactory,
     private carRespository: CarRepository,
-    private platformRepository: PlatformRepository,
     private blockerService: BlockerService,
   ) {}
 
   @EventPattern('load_cars', Transport.KAFKA)
-  async handleCarsNotifications(data: SearchCarsData) {
+  async handleCarsNotifications(data: Data) {
     const blockKey = `load_cars_${data.platform}_${data.city}`;
 
     try {
-      const isBlocked = await this.blockerService.block(blockKey, 2 * 60);
+      const isBlocked = await this.blockerService.block(blockKey, 10 * 60);
       if (isBlocked) {
         this.logger.log(
           `Load cars blocked platform ${data.platform} city ${data.city}`,
@@ -32,30 +35,24 @@ export class CarConsumerController {
 
       this.logger.debug('Loading cars', data);
 
+      const lastProcessedCars = await this.carRespository.findLastProcessedCars(
+        data.city,
+        data.platform,
+      );
+      this.logger.debug(`Platform ${data.platform} city ${data.city}`, {
+        lastProcessedCars,
+      });
+
       const providerRepository = this.providerFactory.create(data.platform);
-      const { cars, lastProcessedRecordTimestamp } =
-        await providerRepository.find(data);
+      const { cars } = await providerRepository.find({
+        ...data,
+        lastProcessedCars,
+      });
 
       this.logger.debug('Loaded cars', cars);
-      this.logger.debug(
-        'LastProcessedRecordTimestamp',
-        lastProcessedRecordTimestamp,
-      );
 
       if (cars.length > 0) {
         await this.carRespository.save(cars);
-
-        const platform = await this.platformRepository.findOne(data.platform);
-
-        for (const cityConfig of platform.config) {
-          if (cityConfig.city === data.city) {
-            cityConfig.lastProcessedRecordTimestamp = new Date(
-              lastProcessedRecordTimestamp,
-            );
-          }
-        }
-
-        await this.platformRepository.update(platform);
       }
     } catch (err) {
       this.logger.error(
@@ -66,4 +63,24 @@ export class CarConsumerController {
       await this.blockerService.unblock(blockKey);
     }
   }
+
+  // private async findLastProcessedTimestamp(
+  //   city: City,
+  //   platform: Platform,
+  // ): Promise<Date> {
+  //   let lastProcessedRecordTimestamp =
+  //     await this.carRespository.findLastProcessedTimestamp(city, platform);
+
+  //   if (!lastProcessedRecordTimestamp) {
+  //     const date = new Date();
+  //     date.setMinutes(date.getMinutes() - 2, 0, 0);
+  //     lastProcessedRecordTimestamp = date;
+  //   } else {
+  //     lastProcessedRecordTimestamp.setMinutes(
+  //       lastProcessedRecordTimestamp.getMinutes() + 1,
+  //     );
+  //   }
+
+  //   return lastProcessedRecordTimestamp;
+  // }
 }

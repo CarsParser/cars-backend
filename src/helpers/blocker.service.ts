@@ -24,6 +24,12 @@ export class BlockerService {
     return false;
   }
 
+  public async isBlocked(key: string): Promise<boolean> {
+    const blocked = await this.redis.get(key);
+
+    return Boolean(blocked);
+  }
+
   public async unblock(key: string) {
     this.logger.debug(`Unblock ${key}`);
     await this.redis.del(key);
