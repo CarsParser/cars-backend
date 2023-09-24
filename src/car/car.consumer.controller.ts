@@ -63,24 +63,4 @@ export class CarConsumerController {
       await this.blockerService.unblock(blockKey);
     }
   }
-
-  // private async findLastProcessedTimestamp(
-  //   city: City,
-  //   platform: Platform,
-  // ): Promise<Date> {
-  //   let lastProcessedRecordTimestamp =
-  //     await this.carRespository.findLastProcessedTimestamp(city, platform);
-
-  //   if (!lastProcessedRecordTimestamp) {
-  //     const date = new Date();
-  //     date.setMinutes(date.getMinutes() - 2, 0, 0);
-  //     lastProcessedRecordTimestamp = date;
-  //   } else {
-  //     lastProcessedRecordTimestamp.setMinutes(
-  //       lastProcessedRecordTimestamp.getMinutes() + 1,
-  //     );
-  //   }
-
-  //   return lastProcessedRecordTimestamp;
-  // }
 }
