@@ -91,6 +91,7 @@ export class AvitoRepository extends ProviderRepository {
         } catch (err) {
           this.logger.error(
             `Error processing page ${page} city ${params.city} platform ${params.platform}`,
+            err,
           );
           break;
         }
