@@ -85,7 +85,6 @@ export class AvitoRepository extends ProviderRepository {
     try {
       // Parse page to page to get all new cars
       for (let page = 1; page <= 100; page++) {
-        await params.heartbeat();
         try {
           this.logger.debug(
             `Processing page ${page} for city ${params.city} platform ${params.platform}`,
@@ -99,7 +98,6 @@ export class AvitoRepository extends ProviderRepository {
               params.lastProcessedCars,
               url.toString(),
               page,
-              params.heartbeat,
             );
           cars.push(...pageCars);
 

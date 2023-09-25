@@ -4,7 +4,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LogLevel, ValidationPipe } from '@nestjs/common';
 import { Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
-import { minutesToMilliseconds, secondsToMilliseconds } from 'date-fns';
 import Redis from 'ioredis';
 import { Proxy } from './proxy/proxy.repository';
 
@@ -128,11 +127,6 @@ async function bootstrap() {
       },
       consumer: {
         groupId: `cars-group`,
-        // sessionTimeout должен быть чуть больше чем в 3 раза heartbeatInterval
-        sessionTimeout: minutesToMilliseconds(3.1),
-        heartbeatInterval: minutesToMilliseconds(1),
-        // rebalanceTimeout должен быть равен sessionTimeout
-        rebalanceTimeout: minutesToMilliseconds(3.1),
       },
     },
   });

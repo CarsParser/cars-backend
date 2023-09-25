@@ -35,6 +35,7 @@ export class CarConsumerController {
   ) {
     const blockKey = `load_cars_${data.platform}_${data.city}`;
     let proxy: Proxy | undefined;
+    let interval: NodeJS.Timeout;
 
     try {
       const isBlocked = await this.blockerService.block(blockKey, 10 * 60);
@@ -45,6 +46,9 @@ export class CarConsumerController {
         );
         return;
       }
+
+      const heartbeat = context.getHeartbeat();
+      interval = setInterval(heartbeat, 1500);
 
       this.logger.debug('Loading cars', { data });
       const lastProcessedCars = await this.carRespository.findLastProcessedCars(
@@ -57,16 +61,13 @@ export class CarConsumerController {
         proxy,
       });
 
-      const heartbeat = context.getHeartbeat();
       const providerRepository = this.providerFactory.create(data.platform);
       const { cars } = await providerRepository.find({
         ...data,
         lastProcessedCars,
-        heartbeat,
         proxy,
       });
 
-      await heartbeat();
       this.logger.debug('Loaded cars', cars);
 
       if (cars.length > 0) {
@@ -82,6 +83,10 @@ export class CarConsumerController {
         await this.proxyRepository.add(proxy);
       }
       await this.blockerService.unblock(blockKey);
+
+      if (interval) {
+        clearInterval(interval);
+      }
     }
   }
 }

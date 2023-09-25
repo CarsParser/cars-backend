@@ -25,14 +25,11 @@ export class AvitoParserService {
     lastProcessedCars: Car[],
     url: string,
     page: number,
-    heartbeat: () => Promise<void>,
   ): Promise<{ cars: Car[]; isLastPage: boolean }> {
     const cars: Car[] = [];
     let isLastPage: boolean = false;
     const pageUrl = new urlLib.URL(url);
     pageUrl.searchParams.append('p', String(page));
-
-    await heartbeat();
 
     this.logger.debug(`Parsing page ${page} url ${pageUrl.toString()}`);
 
@@ -54,7 +51,6 @@ export class AvitoParserService {
     }
 
     for (const avitoCarElement of avitoCarsElements) {
-      await heartbeat();
       try {
         const car = await this.getCarInfo(
           driver,
@@ -64,7 +60,6 @@ export class AvitoParserService {
         );
         this.logger.debug(`Found car for city ${city} page ${page}`, {
           car,
-          heartbeat: heartbeat?.toString(),
         });
 
         if (!car) {
