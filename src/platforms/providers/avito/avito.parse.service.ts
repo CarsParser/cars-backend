@@ -13,8 +13,7 @@ import {
 } from '../../../common';
 import * as urlLib from 'url';
 import * as numParse from 'num-parse';
-
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+import { sleep } from 'src/helpers';
 
 @Injectable()
 export class AvitoParserService {
@@ -54,7 +53,7 @@ export class AvitoParserService {
         this.logger.debug(`Found car for city ${city} page ${page}`, car);
 
         await heartbeat();
-        await delay(2_000);
+        await sleep(2000);
 
         this.logger.debug(`Page ${page} city ${city}`, {
           car,
@@ -63,10 +62,9 @@ export class AvitoParserService {
 
         if (lastProcessedCars.length) {
           const lastProcessedCarIds = lastProcessedCars.map(
-            (lastProcessedCar) =>
-              `${lastProcessedCar.brand}_${lastProcessedCar.model}_${lastProcessedCar.mileage}_${lastProcessedCar.price}`,
+            (lastProcessedCar) => lastProcessedCar.url,
           );
-          const currentCarId = `${car.brand}_${car.model}_${car.mileage}_${car.price}`;
+          const currentCarId = car.url;
 
           const currentCarIdExists = lastProcessedCarIds.some(
             (lastProcessedCarId) => lastProcessedCarId === currentCarId,

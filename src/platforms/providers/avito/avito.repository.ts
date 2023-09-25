@@ -1,31 +1,31 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { City, SearchCarsData } from 'src/common';
 import { FindResponse, ProviderRepository } from '../provider.repository';
-import { ProxyRepository } from 'src/proxy/proxy.repository';
 import { Car } from 'src/car/car.entity';
 import * as seleniumWebdriver from 'selenium-webdriver';
 import * as chrome from 'selenium-webdriver/chrome';
 import * as urlLib from 'url';
 import { AvitoParserService } from './avito.parse.service';
 import { ConfigService } from '@nestjs/config';
+import { subMinutes } from 'date-fns';
+import * as proxy from 'selenium-webdriver/proxy';
 
 @Injectable()
 export class AvitoRepository extends ProviderRepository {
   private avitoCityMapper: { [key in City]: string } = {
     [City.spb]: 'sankt_peterburg_i_lo',
-    // [City.msk]: 'moskva',
-    // [City.arkh]: '',
-    // [City.ekb]: '',
-    // [City.kazan]: '',
-    // [City.omsk]: '',
-    // [City.rostov]: '',
-    // [City.samara]: '',
+    [City.msk]: 'moskva_i_mo',
+    [City.arkh]: 'arhangelskaya_oblast',
+    [City.ekb]: 'sverdlovskaya_oblast',
+    [City.kazan]: 'tatarstan',
+    [City.omsk]: 'omskaya_oblast',
+    [City.rostov]: 'rostovskaya_oblast',
+    [City.samara]: 'samarskaya_oblast',
   };
 
   private readonly logger = new Logger(AvitoRepository.name);
 
   constructor(
-    private readonly proxyRepository: ProxyRepository,
     private readonly avitoParserService: AvitoParserService,
     private readonly configService: ConfigService,
   ) {
@@ -35,7 +35,7 @@ export class AvitoRepository extends ProviderRepository {
   async find(params: SearchCarsData): Promise<FindResponse> {
     this.logger.debug(
       `Searching cars for city ${params.city} platform ${params.platform}`,
-      { lastProcessedCars: params.lastProcessedCars },
+      { lastProcessedCars: params.lastProcessedCars, proxy: params.proxy },
     );
     // Get avito city name
     const avitoCity = this.avitoCityMapper[params.city];
@@ -47,6 +47,21 @@ export class AvitoRepository extends ProviderRepository {
     url.searchParams.append('localPriority', '1');
 
     const capabilities = seleniumWebdriver.Capabilities.chrome();
+
+    // Settinig proxy if exists
+    if (params.proxy) {
+      let httpProxy = `${params.proxy.host}:${params.proxy.port}`;
+
+      if (params.proxy.auth) {
+        httpProxy = `${params.proxy.auth.user}:${params.proxy.auth.password}@${httpProxy}`;
+      }
+
+      this.logger.debug(
+        `Search cars for city ${params.city} platform ${params.platform} proxy ${httpProxy}`,
+      );
+
+      capabilities.setProxy(proxy.manual({ http: httpProxy }));
+    }
     const options = new chrome.Options()
       .headless()
       .addArguments('--no-sandbox', '--disable-dev-shm-usage');
@@ -131,7 +146,7 @@ export class AvitoRepository extends ProviderRepository {
     }
   }
 
-  private getNewestCarPostedAt(cars: Car[]): Date | null {
+  private getNewestCarPostedAt(cars: Car[]): Date {
     if (cars.length) {
       return cars.sort((a, b) => {
         if (!b.postedAt) {
@@ -144,6 +159,6 @@ export class AvitoRepository extends ProviderRepository {
       })[0].postedAt;
     }
 
-    return null;
+    return subMinutes(new Date(), 2);
   }
 }

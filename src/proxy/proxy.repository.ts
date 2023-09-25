@@ -28,16 +28,20 @@ export class ProxyRepository {
     await this.redis.rpush(this.proxyListKey, JSON.stringify(proxy));
   }
 
-  async get(): Promise<Proxy> {
-    let proxy: string;
+  async get(): Promise<Proxy | undefined> {
+    let proxy: string | undefined;
 
-    while (!proxy) {
+    for (let i = 0; i <= 5; i++) {
       proxy = await this.redis.lpop(this.proxyListKey);
 
-      sleep(1000);
+      if (proxy) {
+        break;
+      }
+
+      await sleep(1000);
     }
 
-    return JSON.parse(proxy);
+    return proxy ? JSON.parse(proxy) : undefined;
   }
 
   async find(): Promise<Proxy[]> {

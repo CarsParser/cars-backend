@@ -9,12 +9,14 @@ import { CarProducerService } from './car.producer.service';
 import { CarConsumerController } from './car.consumer.controller';
 import { PlatformsModule } from 'src/platforms/platforms.module';
 import { BlockerService } from 'src/helpers/blocker.service';
+import { ProxyModule } from 'src/proxy/proxy.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Car.name, schema: CarSchema }]),
     ProviderModule,
     PlatformsModule,
+    ProxyModule,
     ConfigModule,
   ],
   controllers: [CarConsumerController],

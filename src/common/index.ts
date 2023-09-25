@@ -1,4 +1,5 @@
 import { Car } from 'src/car/car.entity';
+import { Proxy } from 'src/proxy/proxy.repository';
 
 export enum Platform {
   avito = 'avito',
@@ -6,13 +7,13 @@ export enum Platform {
 
 export enum City {
   spb = 'spb',
-  // msk = 'msk',
-  // samara = 'samara',
-  // ekb = 'ekb',
-  // arkh = 'arkh',
-  // rostov = 'rostov',
-  // omsk = 'omsk',
-  // kazan = 'kazan',
+  msk = 'msk',
+  samara = 'samara',
+  ekb = 'ekb',
+  arkh = 'arkh',
+  rostov = 'rostov',
+  omsk = 'omsk',
+  kazan = 'kazan',
 }
 
 export enum Transmission {
@@ -55,4 +56,5 @@ export interface SearchCarsData {
   city: City;
   lastProcessedCars: Car[];
   heartbeat: () => Promise<void>;
+  proxy?: Proxy;
 }
