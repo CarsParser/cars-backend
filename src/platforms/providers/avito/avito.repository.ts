@@ -7,7 +7,7 @@ import * as chrome from 'selenium-webdriver/chrome';
 import * as urlLib from 'url';
 import { AvitoParserService } from './avito.parse.service';
 import { ConfigService } from '@nestjs/config';
-import { subMinutes } from 'date-fns';
+import { differenceInMinutes } from 'date-fns';
 import * as proxy from 'selenium-webdriver/proxy';
 
 @Injectable()
@@ -48,6 +48,19 @@ export class AvitoRepository extends ProviderRepository {
 
     const capabilities = seleniumWebdriver.Capabilities.chrome();
 
+    const options = new chrome.Options()
+      .headless()
+      .addArguments('--no-sandbox', '--disable-dev-shm-usage');
+
+    // Init driver
+    const chromeServerHost = this.configService.get('CHROME_HOST');
+    const chromeServerPort = this.configService.get('CHROME_PORT');
+    const driverBuilder = new seleniumWebdriver.Builder()
+      .forBrowser('chrome')
+      .usingServer(`http://${chromeServerHost}:${chromeServerPort}`)
+      .withCapabilities(capabilities)
+      .setChromeOptions(options);
+
     // Settinig proxy if exists
     if (params.proxy) {
       let httpProxy = `${params.proxy.host}:${params.proxy.port}`;
@@ -60,24 +73,14 @@ export class AvitoRepository extends ProviderRepository {
         `Search cars for city ${params.city} platform ${params.platform} proxy ${httpProxy}`,
       );
 
-      capabilities.setProxy(proxy.manual({ http: httpProxy }));
+      driverBuilder.setProxy(proxy.manual({ http: httpProxy }));
     }
-    const options = new chrome.Options()
-      .headless()
-      .addArguments('--no-sandbox', '--disable-dev-shm-usage');
 
-    // Init driver
-    const chromeServerHost = this.configService.get('CHROME_HOST');
-    const chromeServerPort = this.configService.get('CHROME_PORT');
-    const driver = new seleniumWebdriver.Builder()
-      .forBrowser('chrome')
-      .usingServer(`http://${chromeServerHost}:${chromeServerPort}`)
-      .withCapabilities(capabilities)
-      .setChromeOptions(options)
-      .build();
+    const driver = driverBuilder.build();
 
     // Found cars
     const cars: Car[] = [];
+    let currentDate: Date = new Date();
 
     try {
       // Parse page to page to get all new cars
@@ -104,6 +107,16 @@ export class AvitoRepository extends ProviderRepository {
           if (isLastPage) {
             this.logger.debug(
               `Page ${page} is last for city ${params.city} platform ${params.platform}`,
+            );
+            break;
+          }
+
+          const newDate: Date = new Date();
+          if (differenceInMinutes(newDate, currentDate) > 5) {
+            this.logger.debug(
+              `Cars load for city ${params.city} platform ${
+                params.platform
+              } is taking ${differenceInMinutes(newDate, currentDate)} break`,
             );
             break;
           }

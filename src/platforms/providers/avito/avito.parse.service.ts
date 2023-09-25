@@ -67,8 +67,6 @@ export class AvitoParserService {
           heartbeat: heartbeat?.toString(),
         });
 
-        await sleep(1500);
-
         if (!car) {
           continue;
         }
