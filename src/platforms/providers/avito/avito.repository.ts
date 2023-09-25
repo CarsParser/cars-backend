@@ -7,7 +7,7 @@ import * as chrome from 'selenium-webdriver/chrome';
 import * as urlLib from 'url';
 import { AvitoParserService } from './avito.parse.service';
 import { ConfigService } from '@nestjs/config';
-import { differenceInMinutes } from 'date-fns';
+import { subMinutes, differenceInMinutes } from 'date-fns';
 import * as proxy from 'selenium-webdriver/proxy';
 
 @Injectable()
