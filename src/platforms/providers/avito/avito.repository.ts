@@ -71,7 +71,7 @@ export class AvitoRepository extends ProviderRepository {
     const chromeServerPort = this.configService.get('CHROME_PORT');
     const driver = new seleniumWebdriver.Builder()
       .forBrowser('chrome')
-      .usingServer(`http://${chromeServerHost}:${chromeServerPort}/wd/hub`)
+      .usingServer(`http://${chromeServerHost}:${chromeServerPort}`)
       .withCapabilities(capabilities)
       .setChromeOptions(options)
       .build();
@@ -82,6 +82,7 @@ export class AvitoRepository extends ProviderRepository {
     try {
       // Parse page to page to get all new cars
       for (let page = 1; page <= 100; page++) {
+        await params.heartbeat();
         try {
           this.logger.debug(
             `Processing page ${page} for city ${params.city} platform ${params.platform}`,

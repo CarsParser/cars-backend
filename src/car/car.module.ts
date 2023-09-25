@@ -30,24 +30,6 @@ import { ProxyModule } from 'src/proxy/proxy.module';
         return ClientProxyFactory.create({
           transport: Transport.KAFKA,
           options: {
-            producer: {
-              createPartitioner:
-                () =>
-                ({ topic, message }) => {
-                  if (topic === 'load_cars') {
-                    const data = JSON.parse(message.value as string);
-
-                    return (
-                      `${data.platform}_${data.city}`
-                        .split('')
-                        .map((c) => c.toUpperCase().charCodeAt(0))
-                        .reduce((prev, curr) => prev + curr, 0) % 10
-                    );
-                  }
-
-                  return 0;
-                },
-            },
             client: {
               clientId: 'cars',
               brokers: [

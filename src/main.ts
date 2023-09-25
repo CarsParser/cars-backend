@@ -128,11 +128,6 @@ async function bootstrap() {
       },
       consumer: {
         groupId: `cars-group`,
-        // sessionTimeout должен быть чуть больше чем в 3 раза heartbeatInterval
-        sessionTimeout: minutesToMilliseconds(2),
-        heartbeatInterval: secondsToMilliseconds(20),
-        // rebalanceTimeout должен быть равен sessionTimeout
-        rebalanceTimeout: minutesToMilliseconds(4),
       },
     },
   });

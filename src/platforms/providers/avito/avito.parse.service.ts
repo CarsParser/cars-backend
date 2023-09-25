@@ -33,6 +33,9 @@ export class AvitoParserService {
     pageUrl.searchParams.append('p', String(page));
 
     await heartbeat();
+
+    this.logger.debug(`Parsing page ${page} url ${pageUrl.toString()}`);
+
     await driver.get(pageUrl.toString());
     const originalWindow = await driver.getWindowHandle();
     const avitoCarsElements = await driver.findElements(
@@ -44,6 +47,7 @@ export class AvitoParserService {
     );
 
     for (const avitoCarElement of avitoCarsElements) {
+      await heartbeat();
       try {
         const car = await this.getCarInfo(
           driver,
@@ -56,8 +60,11 @@ export class AvitoParserService {
           heartbeat: heartbeat?.toString(),
         });
 
-        await heartbeat();
-        await sleep(2000);
+        await sleep(1500);
+
+        if (!car) {
+          continue;
+        }
 
         this.logger.debug(`Page ${page} city ${city}`, {
           car,
@@ -112,8 +119,12 @@ export class AvitoParserService {
     originalWindow: string,
     carElement: WebElement,
     city: City,
-  ): Promise<Car> {
+  ): Promise<Car | undefined> {
     const url = await this.getUrl(carElement);
+    if (!url) {
+      return undefined;
+    }
+
     const price = await this.getPrice(carElement);
     const postUpdatedAt = await this.getPostUpdatedAt(carElement);
 
@@ -519,7 +530,8 @@ export class AvitoParserService {
         .getAttribute('href');
       return url;
     } catch (err) {
-      return 'https://avito.ru';
+      this.logger.error('Unable to get url', err);
+      return '';
     }
   }
 

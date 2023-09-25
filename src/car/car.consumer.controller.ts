@@ -66,6 +66,7 @@ export class CarConsumerController {
         proxy,
       });
 
+      await heartbeat();
       this.logger.debug('Loaded cars', cars);
 
       if (cars.length > 0) {
