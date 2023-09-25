@@ -8,6 +8,7 @@ import { PlatformsModule } from './platforms/platforms.module';
 import { CarModule } from './car/car.module';
 import { RedisModule } from './libs/redis.module';
 import { ProxyModule } from './proxy/proxy.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { ProxyModule } from './proxy/proxy.module';
       }),
       inject: [ConfigService],
     }),
+    LoggerModule.forRoot(),
     ScheduleModule.forRoot(),
     UserModule,
     NotifierModule,
