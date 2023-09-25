@@ -32,6 +32,7 @@ export class AvitoParserService {
     const pageUrl = new urlLib.URL(url);
     pageUrl.searchParams.append('p', String(page));
 
+    await heartbeat();
     await driver.get(pageUrl.toString());
     const originalWindow = await driver.getWindowHandle();
     const avitoCarsElements = await driver.findElements(
@@ -50,7 +51,10 @@ export class AvitoParserService {
           avitoCarElement,
           city,
         );
-        this.logger.debug(`Found car for city ${city} page ${page}`, car);
+        this.logger.debug(`Found car for city ${city} page ${page}`, {
+          car,
+          heartbeat: heartbeat?.toString(),
+        });
 
         await heartbeat();
         await sleep(2000);
