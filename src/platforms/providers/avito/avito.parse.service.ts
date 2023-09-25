@@ -46,6 +46,13 @@ export class AvitoParserService {
       `Page ${page} found ${avitoCarsElements.length} cars city ${city}`,
     );
 
+    if (!avitoCarsElements.length) {
+      return {
+        cars: [],
+        isLastPage: true,
+      };
+    }
+
     for (const avitoCarElement of avitoCarsElements) {
       await heartbeat();
       try {
