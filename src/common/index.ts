@@ -54,4 +54,5 @@ export interface SearchCarsData {
   platform: Platform;
   city: City;
   lastProcessedCars: Car[];
+  heartbeat: () => Promise<void>;
 }

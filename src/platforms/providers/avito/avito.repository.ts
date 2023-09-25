@@ -80,6 +80,7 @@ export class AvitoRepository extends ProviderRepository {
               params.lastProcessedCars,
               url.toString(),
               page,
+              params.heartbeat,
             );
           cars.push(...pageCars);
 

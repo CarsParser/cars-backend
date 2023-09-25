@@ -1,5 +1,11 @@
 import { Controller, Logger } from '@nestjs/common';
-import { EventPattern, Transport } from '@nestjs/microservices';
+import {
+  Ctx,
+  EventPattern,
+  KafkaContext,
+  Payload,
+  Transport,
+} from '@nestjs/microservices';
 import { City, Platform } from 'src/common';
 import { ProviderFactory } from 'src/platforms/providers/provider.factory';
 import { CarRepository } from './car.repository';
@@ -21,7 +27,10 @@ export class CarConsumerController {
   ) {}
 
   @EventPattern('load_cars', Transport.KAFKA)
-  async handleCarsNotifications(data: Data) {
+  async handleCarsNotifications(
+    @Payload() data: Data,
+    @Ctx() context: KafkaContext,
+  ) {
     const blockKey = `load_cars_${data.platform}_${data.city}`;
 
     try {
@@ -34,7 +43,6 @@ export class CarConsumerController {
       }
 
       this.logger.debug('Loading cars', data);
-
       const lastProcessedCars = await this.carRespository.findLastProcessedCars(
         data.city,
         data.platform,
@@ -43,10 +51,12 @@ export class CarConsumerController {
         lastProcessedCars,
       });
 
+      const heartbeat = context.getHeartbeat();
       const providerRepository = this.providerFactory.create(data.platform);
       const { cars } = await providerRepository.find({
         ...data,
         lastProcessedCars,
+        heartbeat,
       });
 
       this.logger.debug('Loaded cars', cars);

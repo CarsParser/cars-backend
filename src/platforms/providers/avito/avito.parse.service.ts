@@ -26,6 +26,7 @@ export class AvitoParserService {
     lastProcessedCars: Car[],
     url: string,
     page: number,
+    heartbeat: () => Promise<void>,
   ): Promise<{ cars: Car[]; isLastPage: boolean }> {
     const cars: Car[] = [];
     let isLastPage: boolean = false;
@@ -52,6 +53,7 @@ export class AvitoParserService {
         );
         this.logger.debug(`Found car for city ${city} page ${page}`, car);
 
+        await heartbeat();
         await delay(2_000);
 
         this.logger.debug(`Page ${page} city ${city}`, {
@@ -338,7 +340,6 @@ export class AvitoParserService {
         .findElement(By.css('p[data-marker="item-date"]'))
         .getText();
 
-      console.log('Updated at string: ', updatedAtString);
       if (updatedAtString.includes('секунд')) {
         const date = new Date();
         date.setSeconds(0, 0);

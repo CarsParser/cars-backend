@@ -36,7 +36,7 @@ import { BlockerService } from 'src/helpers/blocker.service';
                     const data = JSON.parse(message.value as string);
 
                     return (
-                      data.platform
+                      `${data.platform}_${data.city}`
                         .split('')
                         .map((c) => c.toUpperCase().charCodeAt(0))
                         .reduce((prev, curr) => prev + curr, 0) % 10

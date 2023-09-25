@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LogLevel, ValidationPipe } from '@nestjs/common';
 import { Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
+import { minutesToMilliseconds } from 'date-fns';
 
 async function bootstrap() {
   const logLevel: LogLevel[] = ['log', 'error', 'warn'];
@@ -26,6 +27,14 @@ async function bootstrap() {
             'KAFKA_PORT',
           )}`,
         ],
+      },
+      consumer: {
+        groupId: `cars-group`,
+        // sessionTimeout должен быть чуть больше чем в 3 раза heartbeatInterval
+        sessionTimeout: minutesToMilliseconds(1 * 1.5 + 1),
+        heartbeatInterval: minutesToMilliseconds(1 * 0.5),
+        // rebalanceTimeout должен быть равен sessionTimeout
+        rebalanceTimeout: minutesToMilliseconds(1 * 1.5 + 1),
       },
     },
   });
