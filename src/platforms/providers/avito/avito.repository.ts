@@ -50,7 +50,7 @@ export class AvitoRepository extends ProviderRepository {
 
     const options = new chrome.Options()
       .headless()
-      .addArguments('--no-sandbox', '--disable-dev-shm-usage');
+      .addArguments('--no-sandbox');
 
     // Init driver
     const chromeServerHost = this.configService.get('CHROME_HOST');
@@ -83,12 +83,15 @@ export class AvitoRepository extends ProviderRepository {
     let currentDate: Date = new Date();
 
     try {
+      console.time('processingPages');
       // Parse page to page to get all new cars
       for (let page = 1; page <= 100; page++) {
         try {
           this.logger.debug(
             `Processing page ${page} for city ${params.city} platform ${params.platform}`,
           );
+
+          console.time('parse_page');
 
           // Get cars on page and flag if it is last page to search
           const { cars: pageCars, isLastPage } =
@@ -101,6 +104,7 @@ export class AvitoRepository extends ProviderRepository {
             );
           cars.push(...pageCars);
 
+          console.timeEnd('parse_page');
           // If this is last page no need to search new pages
           if (isLastPage) {
             this.logger.debug(
@@ -126,6 +130,7 @@ export class AvitoRepository extends ProviderRepository {
           break;
         }
       }
+      console.timeEnd('processingPages');
 
       // Get newestCar posted at timestamp
       const newestCarPostedAt = this.getNewestCarPostedAt(cars);

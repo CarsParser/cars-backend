@@ -35,9 +35,12 @@ export class AvitoParserService {
 
     await driver.get(pageUrl.toString());
     const originalWindow = await driver.getWindowHandle();
+
+    console.time('fetch_page_elements');
     const avitoCarsElements = await driver.findElements(
       By.css('div[data-marker="item"]'),
     );
+    console.timeEnd('fetch_page_elements');
 
     this.logger.debug(
       `Page ${page} found ${avitoCarsElements.length} cars city ${city}`,
@@ -52,12 +55,14 @@ export class AvitoParserService {
 
     for (const avitoCarElement of avitoCarsElements) {
       try {
+        console.time('get_car_info');
         const car = await this.getCarInfo(
           driver,
           originalWindow,
           avitoCarElement,
           city,
         );
+        console.timeEnd('get_car_info');
         this.logger.debug(`Found car for city ${city} page ${page}`, {
           car,
         });

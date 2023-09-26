@@ -1,22 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { LogLevel, ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { Proxy } from './proxy/proxy.repository';
+import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
-  const logLevel: LogLevel[] = ['log', 'error', 'warn'];
-
-  if (process.env.DEBUG) {
-    logLevel.push('debug');
-  }
-  const app = await NestFactory.create(AppModule, {
-    logger: logLevel,
-  });
-  // app.useLogger(app.get(Logger));
+  const app = await NestFactory.create(AppModule);
+  app.useLogger(app.get(Logger));
   const configService = app.get<ConfigService>(ConfigService);
 
   // Init proxy

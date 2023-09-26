@@ -25,7 +25,15 @@ import { LoggerModule } from 'nestjs-pino';
       }),
       inject: [ConfigService],
     }),
-    LoggerModule.forRoot(),
+    LoggerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => {
+        return {
+          pinoHttp: { level: config.get('DEBUG') ? 'debug' : 'info' },
+        };
+      },
+    }),
     ScheduleModule.forRoot(),
     UserModule,
     NotifierModule,
