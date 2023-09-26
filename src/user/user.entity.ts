@@ -83,9 +83,6 @@ export class Config {
   @Prop({ default: [City.spb], required: true, type: () => [City] })
   cities: City[];
 
-  @Prop({ default: new Date(), required: true, type: () => Date })
-  searchFrom: Date;
-
   @Prop({ required: true, type: () => PriceRange })
   price: PriceRange;
 
@@ -145,6 +142,9 @@ export class User {
 
   @Prop({ default: true, required: true })
   monitor: boolean;
+
+  @Prop({})
+  lastWatchedCar?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

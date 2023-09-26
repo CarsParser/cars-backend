@@ -3,6 +3,8 @@ import { EventPattern, Transport } from '@nestjs/microservices';
 import { CarRepository } from 'src/car/car.repository';
 import { BlockerService } from 'src/helpers/blocker.service';
 import { User } from 'src/user/user.entity';
+import { UserRepository } from '../user/user.repository';
+import { subSeconds } from 'date-fns';
 
 @Controller('notification-consumer')
 export class NotifierConsumerController {
@@ -11,6 +13,7 @@ export class NotifierConsumerController {
   constructor(
     private carsRepository: CarRepository,
     private blockerService: BlockerService,
+    private userRepository: UserRepository,
   ) {}
 
   @EventPattern('cars_notification', Transport.KAFKA)
@@ -26,9 +29,33 @@ export class NotifierConsumerController {
 
       this.logger.debug('Notify user', user);
 
-      const carsToOffer = await this.carsRepository.find(user.config);
+      const carsToOffer = await this.carsRepository.find(user);
 
-      this.logger.debug(`Found cars for user ${user.id}`, carsToOffer);
+      this.logger.debug(
+        `Found cars for user ${user.id}, last watched car is ${user.lastWatchedCar}`,
+        carsToOffer,
+      );
+
+      if (carsToOffer.length) {
+        await this.userRepository.sendTg(user.id, carsToOffer);
+
+        user.lastWatchedCar = subSeconds(
+          carsToOffer.sort((a, b) => {
+            if (!b.postedAt) {
+              return -1;
+            }
+            if (!a.postedAt) {
+              return 1;
+            }
+            return b.postedAt.getTime() - a.postedAt.getTime();
+          })[0].postedAt,
+          -1,
+        );
+        await this.userRepository.update(user);
+        this.logger.debug(
+          `Last watched car was updated: ${user.lastWatchedCar}`,
+        );
+      }
 
       // TODO: send to bot
     } catch (err) {

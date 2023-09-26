@@ -4,6 +4,7 @@ import { Car } from './car.entity';
 import { Model } from 'mongoose';
 import { User } from 'src/user/user.entity';
 import { City, Platform } from 'src/common';
+import { subMinutes } from 'date-fns';
 
 @Injectable()
 export class CarRepository {
@@ -17,10 +18,13 @@ export class CarRepository {
     await this.carModel.create(cars);
   }
 
-  async find(params: User['config']): Promise<Car[]> {
+  async find(user: User): Promise<Car[]> {
+    const { config: params } = user;
     const query = {
       postedAt: {
-        $gte: new Date(params.searchFrom).getTime(),
+        $gte: user.lastWatchedCar
+          ? new Date(user.lastWatchedCar).getTime()
+          : subMinutes(new Date(), 5),
       },
       city: {
         $in: params.cities,

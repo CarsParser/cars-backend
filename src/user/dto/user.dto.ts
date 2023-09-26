@@ -138,14 +138,6 @@ export class Config {
   @ArrayMinSize(1)
   cities: City[];
 
-  @ApiProperty({
-    default: new Date(),
-    type: Date,
-    description: 'Search from datetime',
-  })
-  @IsDate()
-  searchFrom: Date;
-
   @ApiProperty({ type: () => PriceRange, description: 'Price range' })
   @ValidateNested()
   price: PriceRange;
