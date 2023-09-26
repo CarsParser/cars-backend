@@ -19,6 +19,17 @@ import { sleep } from 'src/helpers';
 export class AvitoParserService {
   private readonly logger = new Logger(AvitoParserService.name);
 
+  private async isBlocked(driver: ThenableWebDriver): Promise<boolean> {
+    const title = await driver.getTitle();
+    this.logger.debug(`Page title ${title}`);
+  
+    if (title.toLocaleLowerCase().includes('доступ ограничен')) {
+      return true;
+    }
+
+    return false;
+  }
+
   public async parsePage(
     driver: ThenableWebDriver,
     city: City,
@@ -34,6 +45,17 @@ export class AvitoParserService {
     this.logger.debug(`Parsing page ${page} url ${pageUrl.toString()}`);
 
     await driver.get(pageUrl.toString());
+    const isBlocked = await this.isBlocked(driver);
+
+    if (isBlocked) {
+      await sleep(3000);
+      
+      return {
+        cars: [],
+        isLastPage: true
+      }
+    }
+
     const originalWindow = await driver.getWindowHandle();
 
     console.time('fetch_page_elements');

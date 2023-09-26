@@ -47,10 +47,9 @@ export class AvitoRepository extends ProviderRepository {
     url.searchParams.append('localPriority', '1');
 
     const capabilities = seleniumWebdriver.Capabilities.chrome();
-
     const options = new chrome.Options()
       .headless()
-      .addArguments('--no-sandbox');
+      .addArguments('--no-sandbox', 'start-maximized', '--disable-blink-features=AutomationControlled');
 
     // Init driver
     const chromeServerHost = this.configService.get('CHROME_HOST');
