@@ -9,6 +9,8 @@ import {
   Drive,
   Wheel,
   EngineType,
+  BackType,
+  Color,
 } from 'src/common';
 
 export type CarDocument = HydratedDocument<Car>;
@@ -62,11 +64,11 @@ export class Car {
   @Prop({ required: true })
   year: number;
 
-  @Prop({ required: true })
-  back: string;
+  @Prop({ required: true, enum: BackType })
+  back: BackType;
 
-  @Prop({ required: true })
-  color: string;
+  @Prop({ required: true, enum: Color })
+  color: Color;
 
   @Prop({ required: true, enum: Drive })
   drive: Drive;

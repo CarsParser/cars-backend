@@ -57,3 +57,39 @@ export interface SearchCarsData {
   lastProcessedCars: Car[];
   proxy?: Proxy;
 }
+
+export enum BackType {
+  sedan = 'sedan',
+  offroadThreeDoors = 'offroadThreeDoors',
+  offroadFiveDoors = 'offroadFiveDoors',
+  universal = 'universal',
+  hatchbackThreeDoors = 'hatchbackThreeDoors',
+  hatchbackFiveDoors = 'hatchbcakFiveDoors',
+  coupe = 'coupe',
+  minivan = 'minivan',
+  minibus = 'minibus',
+  liftback = 'liftback',
+  pickup = 'pickup',
+  van = 'van',
+  cabrio = 'cabrio',
+}
+
+export enum Color {
+  white = 'white',
+  gray = 'gray',
+  silver = 'silver',
+  black = 'black',
+  brown = 'brown',
+  gold = 'gold',
+  beige = 'beige',
+  red = 'red',
+  vinous = 'vinous',
+  orange = 'orange',
+  yellow = 'yellow',
+  green = 'green',
+  lightBlue = 'lightBlue',
+  blue = 'blue',
+  violet = 'violet',
+  purple = 'purple',
+  pink = 'pink',
+}

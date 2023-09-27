@@ -20,6 +20,8 @@ import {
   Seller,
   Transmission,
   Wheel,
+  BackType,
+  Color,
 } from 'src/common';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -218,26 +220,29 @@ export class Config {
   year: YeerRange;
 
   @ApiProperty({
-    default: ['sedan'],
+    default: Object.keys(BackType),
     isArray: true,
     minItems: 1,
+    enum: BackType,
     description: 'Backs to search',
   })
   @IsArray()
-  @IsString({ each: true })
+  @IsEnum(BackType, { each: true })
   @ArrayMinSize(1)
-  backs: string[];
+  backs: BackType[];
 
   @ApiProperty({
-    default: ['red'],
+    default: Object.keys(Color),
     isArray: true,
     minItems: 1,
+    enum: Color,
     description: 'Colors to search',
   })
   @IsArray()
-  @IsString({ each: true })
+  @IsEnum(Color, { each: true })
   @ArrayMinSize(1)
-  colors: string[];
+  @ArrayMinSize(1)
+  colors: Color[];
 
   @ApiProperty({
     default: Object.keys(Drive),

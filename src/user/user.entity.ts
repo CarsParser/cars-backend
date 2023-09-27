@@ -1,7 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
 import {
+  BackType,
   City,
+  Color,
   Condition,
   Drive,
   EngineType,
@@ -117,11 +119,11 @@ export class Config {
   @Prop({ required: true, type: () => YearRange })
   year: YearRange;
 
-  @Prop({ required: true, default: ['sedan'], type: () => [String] })
-  backs: string[];
+  @Prop({ required: true, default: ['sedan'], type: () => [BackType] })
+  backs: BackType[];
 
-  @Prop({ required: true, default: ['red'], type: () => [String] })
-  colors: string[];
+  @Prop({ required: true, default: ['red'], type: () => [Color] })
+  colors: Color[];
 
   @Prop({ required: true, default: [Drive.back], type: () => [Drive] })
   drives: Drive[];
