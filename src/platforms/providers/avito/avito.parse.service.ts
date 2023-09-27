@@ -2,7 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { By, ThenableWebDriver, WebElement } from 'selenium-webdriver';
 import { Car } from '../../../car/car.entity';
 import {
+  BackType,
   City,
+  Color,
   Condition,
   Drive,
   EngineType,
@@ -22,7 +24,7 @@ export class AvitoParserService {
   private async isBlocked(driver: ThenableWebDriver): Promise<boolean> {
     const title = await driver.getTitle();
     this.logger.debug(`Page title ${title}`);
-  
+
     if (title.toLocaleLowerCase().includes('доступ ограничен')) {
       return true;
     }
@@ -49,11 +51,11 @@ export class AvitoParserService {
 
     if (isBlocked) {
       await sleep(3000);
-      
+
       return {
         cars: [],
-        isLastPage: true
-      }
+        isLastPage: true,
+      };
     }
 
     const originalWindow = await driver.getWindowHandle();
@@ -175,10 +177,10 @@ export class AvitoParserService {
     const carCharacteristicsListElement =
       await carCharacteristicsElement.findElements(By.tagName('li'));
 
-    let back: string = '';
+    let back: BackType = BackType.sedan;
     let phone: string = 'UNKNOWN';
     let year: number = 2100;
-    let color: string = 'Черный';
+    let color: Color = Color.red;
     let millage: number = 0;
     let ownersCount: number = 1;
     let condition: Condition = Condition.hit;
@@ -203,7 +205,76 @@ export class AvitoParserService {
           break;
         }
         case 'Цвет': {
-          color = characteristicValue;
+          switch (characteristicValue) {
+            case 'Красный': {
+              color = Color.red;
+              break;
+            }
+            case 'Белый': {
+              color = Color.white;
+              break;
+            }
+            case 'Серебряный': {
+              color = Color.silver;
+              break;
+            }
+            case 'Серый': {
+              color = Color.gray;
+              break;
+            }
+            case 'Чёрный': {
+              color = Color.black;
+              break;
+            }
+            case 'Коричневый': {
+              color = Color.brown;
+              break;
+            }
+            case 'Золотой': {
+              color = Color.gold;
+              break;
+            }
+            case 'Бежевый': {
+              color = Color.beige;
+              break;
+            }
+            case 'Бордовый': {
+              color = Color.vinous;
+              break;
+            }
+            case 'Оранжевый': {
+              color = Color.orange;
+              break;
+            }
+            case 'Жёлтый': {
+              color = Color.yellow;
+              break;
+            }
+            case 'Зелёный': {
+              color = Color.green;
+              break;
+            }
+            case 'Голубой': {
+              color = Color.lightBlue;
+              break;
+            }
+            case 'Синий': {
+              color = Color.blue;
+              break;
+            }
+            case 'Фиолетовый': {
+              color = Color.violet;
+              break;
+            }
+            case 'Пурпурный': {
+              color = Color.purple;
+              break;
+            }
+            case 'Розовый': {
+              color = Color.pink;
+              break;
+            }
+          }
           break;
         }
         case 'Пробег': {
@@ -304,7 +375,60 @@ export class AvitoParserService {
           break;
         }
         case 'Тип кузова': {
-          back = characteristicValue;
+          switch (characteristicValue) {
+            case 'Седан': {
+              back = BackType.sedan;
+              break;
+            }
+            case 'Внедорожник 3-дверный': {
+              back = BackType.offroadThreeDoors;
+              break;
+            }
+            case 'Внедорожник 5-дверный': {
+              back = BackType.offroadFiveDoors;
+              break;
+            }
+            case 'Универсал': {
+              back = BackType.universal;
+              break;
+            }
+            case 'Хетчбек 3-дверный': {
+              back = BackType.hatchbackThreeDoors;
+              break;
+            }
+            case 'Хетчбек 5-дверный': {
+              back = BackType.hatchbackFiveDoors;
+              break;
+            }
+            case 'Купе': {
+              back = BackType.coupe;
+              break;
+            }
+            case 'Минивэн': {
+              back = BackType.minivan;
+              break;
+            }
+            case 'Микроавтобус': {
+              back = BackType.minibus;
+              break;
+            }
+            case 'Лифтбек': {
+              back = BackType.liftback;
+              break;
+            }
+            case 'Пикап': {
+              back = BackType.pickup;
+              break;
+            }
+            case 'Фургон': {
+              back = BackType.van;
+              break;
+            }
+            case 'Кабриолет': {
+              back = BackType.cabrio;
+              break;
+            }
+          }
           break;
         }
         case 'Руль': {
