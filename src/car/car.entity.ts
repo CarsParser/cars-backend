@@ -64,10 +64,10 @@ export class Car {
   @Prop({ required: true })
   year: number;
 
-  @Prop({ required: true })
+  @Prop({ required: true, enum: BackType })
   back: BackType;
 
-  @Prop({ required: true })
+  @Prop({ required: true, enum: Color })
   color: Color;
 
   @Prop({ required: true, enum: Drive })

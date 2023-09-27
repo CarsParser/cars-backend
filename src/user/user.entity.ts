@@ -119,10 +119,10 @@ export class Config {
   @Prop({ required: true, type: () => YearRange })
   year: YearRange;
 
-  @Prop({ required: true, default: ['sedan'], type: () => [String] })
+  @Prop({ required: true, default: ['sedan'], type: () => [BackType] })
   backs: BackType[];
 
-  @Prop({ required: true, default: ['red'], type: () => [String] })
+  @Prop({ required: true, default: ['red'], type: () => [Color] })
   colors: Color[];
 
   @Prop({ required: true, default: [Drive.back], type: () => [Drive] })
