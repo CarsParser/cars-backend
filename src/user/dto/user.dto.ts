@@ -105,7 +105,7 @@ export class Engine {
   power: EnginePowerRange;
 
   @ApiProperty({
-    default: [EngineType.disel],
+    default: Object.keys(EngineType),
     isArray: true,
     minItems: 1,
     enum: EngineType,
@@ -117,7 +117,7 @@ export class Engine {
 
 export class Config {
   @ApiProperty({
-    default: [Platform.avito],
+    default: Object.keys(Platform),
     isArray: true,
     minItems: 1,
     enum: Platform,
@@ -128,7 +128,7 @@ export class Config {
   platforms: Platform[];
 
   @ApiProperty({
-    default: [City.spb],
+    default: Object.keys(City),
     isArray: true,
     minItems: 1,
     enum: City,
@@ -143,7 +143,7 @@ export class Config {
   price: PriceRange;
 
   @ApiProperty({
-    default: ['bmw'],
+    default: ['BMW'],
     isArray: true,
     minItems: 1,
     description: 'Brands to search',
@@ -173,7 +173,7 @@ export class Config {
   mileage: MilegeRange;
 
   @ApiProperty({
-    default: [Transmission.auto],
+    default: Object.keys(Transmission),
     isArray: true,
     minItems: 1,
     enum: Transmission,
@@ -192,7 +192,7 @@ export class Config {
   ownersCount: OwnersCountRange;
 
   @ApiProperty({
-    default: [Condition.hit],
+    default: Object.keys(Condition),
     isArray: true,
     minItems: 1,
     enum: Condition,
@@ -203,7 +203,7 @@ export class Config {
   conditions: Condition[];
 
   @ApiProperty({
-    default: [Seller.dealer],
+    default: Object.keys(Seller),
     isArray: true,
     minItems: 1,
     enum: Seller,
@@ -240,7 +240,7 @@ export class Config {
   colors: string[];
 
   @ApiProperty({
-    default: [Drive.front],
+    default: Object.keys(Drive),
     isArray: true,
     minItems: 1,
     enum: Drive,
@@ -251,7 +251,7 @@ export class Config {
   drives: Drive[];
 
   @ApiProperty({
-    default: [Wheel.left],
+    default: Object.keys(Wheel),
     isArray: true,
     minItems: 1,
     enum: Wheel,
