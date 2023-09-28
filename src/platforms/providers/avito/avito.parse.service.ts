@@ -16,6 +16,7 @@ import {
 import * as urlLib from 'url';
 import * as numParse from 'num-parse';
 import { sleep } from 'src/helpers';
+import Tesseract from 'tesseract.js';
 
 @Injectable()
 export class AvitoParserService {
@@ -155,6 +156,7 @@ export class AvitoParserService {
     }
 
     const price = await this.getPrice(carElement);
+    const costDifference = await this.getCostDifference(driver, price);
     const postUpdatedAt = await this.getPostUpdatedAt(carElement);
 
     this.logger.debug(
@@ -190,7 +192,6 @@ export class AvitoParserService {
     let transmission: Transmission = Transmission.mechanic;
     let drive: Drive = Drive.back;
     let wheel: Wheel = Wheel.left;
-    let costDifference: number = 0;
 
     for (const carCharacteristicElement of carCharacteristicsListElement) {
       const [characteristicName, characteristicValue] = (
@@ -699,5 +700,38 @@ export class AvitoParserService {
     } catch (err) {
       return 'https://avito.ru';
     }
+  }
+  private async getCostDifference(
+    driver: ThenableWebDriver,
+    price: number,
+  ): Promise<number> {
+    try {
+      const lowestPrice = await driver
+        .findElement(
+          By.css('span[class="styles-subtitle-_GzPh desktop-1760830"]'),
+        )
+        .getText();
+      this.logger.debug(`Lowest average price = ${lowestPrice}`);
+      return price - numParse(lowestPrice.replace(' ', ''));
+    } catch (e) {
+      this.logger.error('Error getting cost difference', e);
+    }
+    return 0;
+  }
+
+  private async getPhoneNumber(driver: ThenableWebDriver): Promise<string> {
+    const button = await driver.findElement(
+      By.css('button[data-marker="item-phone-button/card"]'),
+    );
+    await button.click();
+    const numberPict = await driver
+      .findElement(By.css("img[data-marker='phone-image']"))
+      .getAttribute('src');
+    const numberString = Tesseract.recognize(numberPict, 'eng', {
+      logger: (m) => console.log(m),
+    }).then(({ data: { text } }) => {
+      return text;
+    });
+    return numberString;
   }
 }
