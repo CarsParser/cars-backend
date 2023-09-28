@@ -43,9 +43,9 @@ export class UserRepository {
     this.logger.debug(`Sending cars to chatId: ${chatId}`, cars);
     for (const car of cars) {
       try {
-        const url = `https://api.telegram.org/bot6342868231:AAHx0qLAOdfxi3ZLXy5gzH1LkGyVKRVPIns/sendMessage?chat_id=${chatId}&text=${this.getTgTemplate(
-          car,
-        )}&parse_mode=html`;
+        const url = `https://api.telegram.org/bot6342868231:AAHx0qLAOdfxi3ZLXy5gzH1LkGyVKRVPIns/sendPhoto?chat_id=${chatId}&photo=${
+          car.imageUrl
+        }&caption=${this.getTgTemplate(car)}&parse_mode=html`;
         await this.httpService.axiosRef.get(url);
       } catch (error) {
         this.logger.error(`Unable to send car chatID:${chatId}`, error);
@@ -53,25 +53,6 @@ export class UserRepository {
     }
   }
   private getTgTemplate(car: Car): string {
-    return `<b><a href="${car.url}">${car.brand} ${car.model}, ${car.year}, ${car.engineVolume}, ${car.transmission}, ${car.mileage}km</a></b>%0A%0A
-        <b>💰 Цена: ${car.price} ₽</b>%0A
-        🛠 <b>Параметры:</b>%0A<i>
-          - Мощность двигателя: ${car.enginePower} л.с.%0A
-          - Обьем двигателя: ${car.engineVolume} л.%0A
-          - Тип двигателя: ${car.engineType}%0A
-          - Коробка передач: ${car.transmission}%0A
-          - Привод: ${car.drive}%0A
-          - Цвет: ${car.color}%0A
-          - Пробег: ${car.mileage} км.%0A
-          - Руль: ${car.wheel}%0A
-          - Кол-во владельцев: ${car.ownersCount}%0A
-          - Состояние: ${car.condition}%0A
-          - Тип кузова: ${car.back}</i>%0A
-        👤 <b>Продавец:</b> ${car.seller}%0A
-        🌏 <b>Город:</b> ${car.city}%0A
-        ✅ <b>Ссылка:</b> ${car.url}%0A
-        ⏱ <b>Время получения:</b> ${car.postedAt} МСК%0A%0A
-        Телефон: ${car.phone}
-`;
+    return `<b><a href="${car.url}">${car.brand} ${car.model}, ${car.year}, ${car.engineVolume}, ${car.transmission}, ${car.mileage}km</a></b>%0A<b>💰 Цена: ${car.price} ₽</b>%0A🛠 <b>Параметры:</b>%0A<i>- Мощность двигателя: ${car.enginePower} л.с.%0A- Обьем двигателя: ${car.engineVolume} л.%0A- Тип двигателя: ${car.engineType}%0A- Коробка передач: ${car.transmission}%0A- Привод: ${car.drive}%0A- Цвет: ${car.color}%0A- Пробег: ${car.mileage} км.%0A- Руль: ${car.wheel}%0A- Кол-во владельцев: ${car.ownersCount}%0A- Состояние: ${car.condition}%0A- Тип кузова: ${car.back}</i>%0A👤 <b>Продавец:</b> ${car.seller}%0A🌏 <b>Город:</b> ${car.city}%0A✅ <b>Ссылка:</b> ${car.url}%0A⏱ <b>Время получения:</b> ${car.postedAt} МСК%0A%0AТелефон: ${car.phone}`;
   }
 }
