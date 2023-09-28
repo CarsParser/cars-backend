@@ -101,6 +101,86 @@ async function bootstrap() {
             password: 'xawrob',
           },
         },
+        {
+          host: '195.96.141.95',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '212.52.4.207',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '195.96.150.184',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '195.96.141.239',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '212.52.13.240',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '195.96.141.72',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '195.96.150.96',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '212.52.4.61',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '195.96.141.136',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
+        {
+          host: '212.18.98.13',
+          port: 5238,
+          auth: {
+            user: 'user136439',
+            password: 'xawrob',
+          },
+        },
       ];
       await redisService.rpush(
         'proxy',

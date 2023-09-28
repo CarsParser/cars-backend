@@ -53,6 +53,10 @@ export class UserRepository {
     }
   }
   private getTgTemplate(car: Car): string {
-    return `<b><a href="${car.url}">${car.brand} ${car.model}, ${car.year}, ${car.engineVolume}, ${car.transmission}, ${car.mileage}km</a></b>%0A<b>💰 Цена: ${car.price} ₽</b>%0A🛠 <b>Параметры:</b>%0A<i>- Мощность двигателя: ${car.enginePower} л.с.%0A- Обьем двигателя: ${car.engineVolume} л.%0A- Тип двигателя: ${car.engineType}%0A- Коробка передач: ${car.transmission}%0A- Привод: ${car.drive}%0A- Цвет: ${car.color}%0A- Пробег: ${car.mileage} км.%0A- Руль: ${car.wheel}%0A- Кол-во владельцев: ${car.ownersCount}%0A- Состояние: ${car.condition}%0A- Тип кузова: ${car.back}</i>%0A👤 <b>Продавец:</b> ${car.seller}%0A🌏 <b>Город:</b> ${car.city}%0A✅ <b>Ссылка:</b> ${car.url}%0A⏱ <b>Время получения:</b> ${car.postedAt} МСК%0A%0AТелефон: ${car.phone}`;
+    const costDifference =
+      car.costDifference > 0
+        ? `🟢${car.costDifference}`
+        : `🔴${-car.costDifference}`;
+    return `<b><a href="${car.url}">${car.brand} ${car.model}, ${car.year}, ${car.engineVolume}, ${car.transmission}, ${car.mileage}km</a></b>%0A<b>💰 Цена: ${car.price} ₽</b>%0A🛠 <b>Параметры:</b>%0A<i>- Мощность двигателя: ${car.enginePower} л.с.%0A- Обьем двигателя: ${car.engineVolume} л.%0A- Тип двигателя: ${car.engineType}%0A- Коробка передач: ${car.transmission}%0A- Привод: ${car.drive}%0A- Цвет: ${car.color}%0A- Пробег: ${car.mileage} км.%0A- Руль: ${car.wheel}%0A- Кол-во владельцев: ${car.ownersCount}%0A- Состояние: ${car.condition}%0A- Тип кузова: ${car.back}%0A- Разница в цене: ${costDifference}</i>%0A👤 <b>Продавец:</b> ${car.seller}%0A🌏 <b>Город:</b> ${car.city}%0A✅ <b>Ссылка:</b> ${car.url}%0A⏱ <b>Время получения:</b> ${car.postedAt} МСК%0A%0AТелефон: ${car.phone}`;
   }
 }
