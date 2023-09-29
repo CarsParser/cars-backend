@@ -180,7 +180,6 @@ export class AvitoParserService {
       await carCharacteristicsElement.findElements(By.tagName('li'));
 
     let back: BackType = BackType.sedan;
-    let phone: string = await this.getPhoneNumber(driver);
     let year: number = 2100;
     let color: Color = Color.red;
     let millage: number = 0;
@@ -448,6 +447,7 @@ export class AvitoParserService {
       }
     }
 
+    const phone = await this.getPhoneNumber(driver);
     await driver.close();
     await driver.switchTo().window(originalWindow);
 
