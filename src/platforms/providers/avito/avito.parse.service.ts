@@ -712,8 +712,8 @@ export class AvitoParserService {
           By.css('span[class="styles-subtitle-_GzPh desktop-1760830"]'),
         )
         .getText();
-      this.logger.debug(`Lowest average price = ${lowestPrice}`);
-      return price - numParse(lowestPrice.replace(' ', ''));
+      this.logger.debug(`Lowest average price = ${lowestPrice}, parsed ${numParse(lowestPrice.replace(/ /g, ''))}, price ${price}`);
+      return price - numParse(lowestPrice.replace(/ /g, ''));
     } catch (e) {
       this.logger.error('Error getting cost difference', e);
     }
@@ -726,7 +726,7 @@ export class AvitoParserService {
         By.css('button[data-marker="item-phone-button/card"]'),
       );
       await button.click();
-      await driver.wait(until.elementLocated(By.css('img[data-marker="phone-popup/phone-image"]')), 10_000)
+      await driver.wait(until.elementLocated(By.css('img[data-marker="phone-popup/phone-image"]')), 15_000)
       const numberPict = await driver
         .findElement(By.css('img[data-marker="phone-popup/phone-image"]'))
         .getAttribute('src');
