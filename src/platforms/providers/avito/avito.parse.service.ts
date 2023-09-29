@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { By, ThenableWebDriver, WebElement } from 'selenium-webdriver';
+import { By, ThenableWebDriver, WebElement, until } from 'selenium-webdriver';
 import { Car } from '../../../car/car.entity';
 import {
   BackType,
@@ -16,7 +16,7 @@ import {
 import * as urlLib from 'url';
 import * as numParse from 'num-parse';
 import { sleep } from 'src/helpers';
-import Tesseract from 'tesseract.js';
+import * as Tesseract from 'tesseract.js';
 
 @Injectable()
 export class AvitoParserService {
@@ -157,7 +157,6 @@ export class AvitoParserService {
     }
 
     const price = await this.getPrice(carElement);
-    const costDifference = await this.getCostDifference(driver, price);
     const postUpdatedAt = await this.getPostUpdatedAt(carElement);
 
     this.logger.debug(
@@ -172,6 +171,7 @@ export class AvitoParserService {
     const postedAt = await this.getPostTimestamp(driver);
     const seller = await this.getSellerType(driver);
     const newAdd = this.isNewAdd(postedAt, postUpdatedAt);
+    const costDifference = await this.getCostDifference(driver, price);
 
     const carCharacteristicsElement = await driver.findElement(
       By.css('div[data-marker="item-view/item-params"]'),
@@ -721,18 +721,25 @@ export class AvitoParserService {
   }
 
   private async getPhoneNumber(driver: ThenableWebDriver): Promise<string> {
-    const button = await driver.findElement(
-      By.css('button[data-marker="item-phone-button/card"]'),
-    );
-    await button.click();
-    const numberPict = await driver
-      .findElement(By.css("img[data-marker='phone-image']"))
-      .getAttribute('src');
-    const numberString = Tesseract.recognize(numberPict, 'eng', {
-      logger: (m) => console.log(m),
-    }).then(({ data: { text } }) => {
-      return text;
-    });
-    return numberString;
+    try {
+      const button = await driver.findElement(
+        By.css('button[data-marker="item-phone-button/card"]'),
+      );
+      await button.click();
+      await driver.wait(until.elementLocated(By.css('img[data-marker="phone-popup/phone-image"]')), 10_000)
+      const numberPict = await driver
+        .findElement(By.css('img[data-marker="phone-popup/phone-image"]'))
+        .getAttribute('src');
+      const { data: { text } } = await Tesseract.recognize(numberPict, 'eng', {
+        logger: (m) => this.logger.debug('Parse phone', m),
+      })
+      const numberString = text.replace('\n', '');
+      this.logger.debug(`Number string ${numberString}`)
+      return numberString;
+    }catch (err){
+      this.logger.error(`Unable to get phone`, err)
+
+      return 'UNKNOWN';
+    }
   }
 }
