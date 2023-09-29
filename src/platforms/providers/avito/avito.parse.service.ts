@@ -93,7 +93,8 @@ export class AvitoParserService {
         });
 
         if (!car) {
-          continue;
+          isLastPage = true;
+          break;
         }
 
         this.logger.debug(`Page ${page} city ${city}`, {
