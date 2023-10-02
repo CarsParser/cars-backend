@@ -152,9 +152,9 @@ export class UserRepository {
     if (car.costDifference === 0) {
       costDifference = 'нет информации';
     } else if (car.costDifference > 0) {
-      costDifference = `🟢${car.costDifference}`;
+      costDifference = `🟡 Выше минимальной цены на: ${car.costDifference}`;
     } else {
-      costDifference = `🔴${-car.costDifference}`;
+      costDifference = `🟢 Ниже минимальной цены на: ${-car.costDifference}`;
     }
 
     let template = `<b><a href="${car.url}">${car.brand} ${car.model}, ${
