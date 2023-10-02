@@ -16,6 +16,7 @@ import {
   Transmission,
   Wheel,
 } from 'src/common';
+import { formatInTimeZone } from 'date-fns-tz';
 
 const botColor: { [key in Color]: string } = {
   [Color.white]: 'белый',
@@ -179,9 +180,13 @@ export class UserRepository {
       botSeller[car.seller]
     }%0A🌏 <b>Город:</b> ${botCity[car.city]}%0A✅ <b>Ссылка:</b> ${
       car.url
-    }%0A⏱ <b>Время получения:</b> ${car.postedAt.toLocaleString()} МСК`;
+    }%0A⏱ <b>Время получения:</b> ${formatInTimeZone(
+      car.postedAt,
+      'Europe/Moscow',
+      'dd-MM-yyyy HH:mm',
+    )} МСК`;
 
-    if (car.phone) {
+    if (car.phone && car.phone !== 'UNKNOWN') {
       template += `%0A%0AТелефон: ${car.phone}`;
     }
 
