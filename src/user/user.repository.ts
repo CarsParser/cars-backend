@@ -5,6 +5,99 @@ import { User } from './user.entity';
 import { Model } from 'mongoose';
 import { Car } from '../car/car.entity';
 import { HttpService } from '@nestjs/axios';
+import {
+  BackType,
+  City,
+  Color,
+  Condition,
+  Drive,
+  EngineType,
+  Seller,
+  Transmission,
+  Wheel,
+} from 'src/common';
+
+const botColor: { [key in Color]: string } = {
+  [Color.white]: 'белый',
+  [Color.gray]: 'серый',
+  [Color.silver]: 'серебрянный',
+  [Color.black]: 'чёрный',
+  [Color.brown]: 'коричневый',
+  [Color.gold]: 'золотой',
+  [Color.beige]: 'бежевый',
+  [Color.red]: 'красный',
+  [Color.vinous]: 'бордовый',
+  [Color.orange]: 'оранжевый',
+  [Color.yellow]: 'желтый',
+  [Color.green]: 'зеленый',
+  [Color.lightBlue]: 'голубой',
+  [Color.blue]: 'синий',
+  [Color.violet]: 'фиолеторый',
+  [Color.purple]: 'пурпурный',
+  [Color.pink]: 'розовый',
+};
+
+const botEngineType: { [key in EngineType]: string } = {
+  [EngineType.disel]: 'дизель',
+  [EngineType.petrol]: 'бензин',
+  [EngineType.hybrid]: 'гибрид',
+  [EngineType.electric]: 'электро',
+};
+
+const botTransmission: { [key in Transmission]: string } = {
+  [Transmission.auto]: 'автомат',
+  [Transmission.robot]: 'робот',
+  [Transmission.vary]: 'вариатор',
+  [Transmission.mechanic]: 'механика',
+};
+
+const botDrive: { [key in Drive]: string } = {
+  [Drive.front]: 'передний',
+  [Drive.back]: 'задний',
+  [Drive.full]: 'полный',
+};
+
+const botWheel: { [key in Wheel]: string } = {
+  [Wheel.right]: 'правый',
+  [Wheel.left]: 'левый',
+};
+
+const botCondition: { [key in Condition]: string } = {
+  [Condition.hit]: 'битый',
+  [Condition.notHit]: 'не битый',
+};
+
+const botBackType: { [key in BackType]: string } = {
+  [BackType.sedan]: 'седан',
+  [BackType.offroadThreeDoors]: 'внедорожник 3-дверный',
+  [BackType.offroadFiveDoors]: 'внедорожник 3-дверный',
+  [BackType.universal]: 'универсал',
+  [BackType.hatchbackThreeDoors]: 'хетчбек 3-дверный',
+  [BackType.hatchbackFiveDoors]: 'хетчбек 5-дверный',
+  [BackType.coupe]: 'купе',
+  [BackType.minivan]: 'минивэн',
+  [BackType.minibus]: 'микроавтобус',
+  [BackType.liftback]: 'лифтбек',
+  [BackType.pickup]: 'пикап',
+  [BackType.van]: 'фургон',
+  [BackType.cabrio]: 'кабриолет',
+};
+
+const botSeller: { [key in Seller]: string } = {
+  [Seller.dealer]: 'автодилер',
+  [Seller.private]: 'частное лицо',
+};
+
+const botCity: { [key in City]: string } = {
+  [City.spb]: 'Санкт-Петербург',
+  [City.msk]: 'Москва',
+  [City.samara]: 'Самара',
+  [City.ekb]: 'Екатеринбург',
+  [City.arkh]: 'Архангельск',
+  [City.rostov]: 'Ростов',
+  [City.omsk]: 'Омск',
+  [City.kazan]: 'Казань',
+};
 
 interface IFindParams {
   monitor: boolean;
@@ -52,11 +145,46 @@ export class UserRepository {
       }
     }
   }
+
   private getTgTemplate(car: Car): string {
-    const costDifference =
-      car.costDifference > 0
-        ? `🟢${car.costDifference}`
-        : `🔴${-car.costDifference}`;
-    return `<b><a href="${car.url}">${car.brand} ${car.model}, ${car.year}, ${car.engineVolume}, ${car.transmission}, ${car.mileage}km</a></b>%0A<b>💰 Цена: ${car.price} ₽</b>%0A🛠 <b>Параметры:</b>%0A<i>- Мощность двигателя: ${car.enginePower} л.с.%0A- Обьем двигателя: ${car.engineVolume} л.%0A- Тип двигателя: ${car.engineType}%0A- Коробка передач: ${car.transmission}%0A- Привод: ${car.drive}%0A- Цвет: ${car.color}%0A- Пробег: ${car.mileage} км.%0A- Руль: ${car.wheel}%0A- Кол-во владельцев: ${car.ownersCount}%0A- Состояние: ${car.condition}%0A- Тип кузова: ${car.back}%0A- Разница в цене: ${costDifference}</i>%0A👤 <b>Продавец:</b> ${car.seller}%0A🌏 <b>Город:</b> ${car.city}%0A✅ <b>Ссылка:</b> ${car.url}%0A⏱ <b>Время получения:</b> ${car.postedAt} МСК%0A%0AТелефон: ${car.phone}`;
+    let costDifference: string = '';
+
+    if (car.costDifference === 0) {
+      costDifference = 'нет информации';
+    } else if (car.costDifference > 0) {
+      costDifference = `🟢${car.costDifference}`;
+    } else {
+      costDifference = `🔴${-car.costDifference}`;
+    }
+
+    let template = `<b><a href="${car.url}">${car.brand} ${car.model}, ${
+      car.year
+    }, ${car.engineVolume}, ${botTransmission[car.transmission]}, ${
+      car.mileage
+    }km</a></b>%0A<b>💰 Цена: ${
+      car.price
+    } ₽</b>%0A🛠 <b>Параметры:</b>%0A<i>- Мощность двигателя: ${
+      car.enginePower
+    } л.с.%0A- Обьем двигателя: ${car.engineVolume} л.%0A- Тип двигателя: ${
+      botEngineType[car.engineType]
+    }%0A- Коробка передач: ${botTransmission[car.transmission]}%0A- Привод: ${
+      botDrive[car.drive]
+    }%0A- Цвет: ${botColor[car.color]}%0A- Пробег: ${
+      car.mileage
+    } км.%0A- Руль: ${botWheel[car.wheel]}%0A- Кол-во владельцев: ${
+      car.ownersCount
+    }%0A- Состояние: ${botCondition[car.condition]}%0A- Тип кузова: ${
+      botBackType[car.back]
+    }%0A- Разница в цене: ${costDifference}</i>%0A👤 <b>Продавец:</b> ${
+      botSeller[car.seller]
+    }%0A🌏 <b>Город:</b> ${botCity[car.city]}%0A✅ <b>Ссылка:</b> ${
+      car.url
+    }%0A⏱ <b>Время получения:</b> ${car.postedAt.toLocaleString()} МСК`;
+
+    if (car.phone) {
+      template += `%0A%0AТелефон: ${car.phone}`;
+    }
+
+    return template;
   }
 }

@@ -8,9 +8,7 @@ import {
 } from '@nestjs/microservices';
 import { City, Platform } from 'src/common';
 import { ProviderFactory } from 'src/platforms/providers/provider.factory';
-import { CarRepository } from './car.repository';
 import { BlockerService } from 'src/helpers/blocker.service';
-import { Proxy, ProxyRepository } from 'src/proxy/proxy.repository';
 
 export interface Data {
   platform: Platform;
@@ -23,9 +21,7 @@ export class CarConsumerController {
 
   constructor(
     private providerFactory: ProviderFactory,
-    private carRespository: CarRepository,
     private blockerService: BlockerService,
-    private proxyRepository: ProxyRepository,
   ) {}
 
   @EventPattern('load_cars', Transport.KAFKA)
@@ -34,7 +30,6 @@ export class CarConsumerController {
     @Ctx() context: KafkaContext,
   ) {
     const blockKey = `load_cars_${data.platform}_${data.city}`;
-    let proxy: Proxy | undefined;
     let interval: NodeJS.Timeout;
 
     try {
@@ -42,7 +37,6 @@ export class CarConsumerController {
       if (isBlocked) {
         this.logger.log(
           `Load cars blocked platform ${data.platform} city ${data.city}`,
-          { proxy },
         );
         return;
       }
@@ -51,37 +45,15 @@ export class CarConsumerController {
       interval = setInterval(heartbeat, 1500);
 
       this.logger.debug('Loading cars', { data });
-      const lastProcessedCars = await this.carRespository.findLastProcessedCars(
-        data.city,
-        data.platform,
-      );
-      proxy = await this.proxyRepository.get();
-      this.logger.debug(`Platform ${data.platform} city ${data.city}`, {
-        lastProcessedCars,
-        proxy,
-      });
 
       const providerRepository = this.providerFactory.create(data.platform);
-      const { cars } = await providerRepository.find({
-        ...data,
-        lastProcessedCars,
-        proxy,
-      });
-
-      this.logger.debug('Loaded cars', cars);
-
-      if (cars.length > 0) {
-        await this.carRespository.save(cars);
-      }
+      await providerRepository.loadCars(data.city);
     } catch (err) {
       this.logger.error(
         `Load cars fauled for platform ${data.platform} city ${data.city}`,
       );
       throw err;
     } finally {
-      if (proxy) {
-        await this.proxyRepository.add(proxy);
-      }
       await this.blockerService.unblock(blockKey);
 
       if (interval) {

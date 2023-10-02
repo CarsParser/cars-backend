@@ -1,10 +1,5 @@
-import { Car } from 'src/car/car.entity';
-import { SearchCarsData } from 'src/common';
-
-export interface FindResponse {
-  cars: Car[];
-}
+import { City } from 'src/common';
 
 export abstract class ProviderRepository {
-  abstract find(params: SearchCarsData): Promise<FindResponse>;
+  abstract loadCars(city: City): Promise<void>;
 }

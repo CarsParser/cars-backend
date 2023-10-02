@@ -1,5 +1,4 @@
 import { Car } from 'src/car/car.entity';
-import { Proxy } from 'src/proxy/proxy.repository';
 
 export enum Platform {
   avito = 'avito',
@@ -55,7 +54,6 @@ export interface SearchCarsData {
   platform: Platform;
   city: City;
   lastProcessedCars: Car[];
-  proxy?: Proxy;
 }
 
 export enum BackType {

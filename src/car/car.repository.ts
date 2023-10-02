@@ -95,7 +95,7 @@ export class CarRepository {
     return cars;
   }
 
-  async findLastProcessedCars(city: City, platform: Platform): Promise<Car[]> {
+  async findLastProcessedCars(city: City, platform: Platform): Promise<(Pick<Car, 'postedAt' | 'url'>)[]> {
     const lastCar = await this.carModel
       .findOne({ city, platform })
       .sort({ postedAt: -1 })
@@ -113,6 +113,7 @@ export class CarRepository {
 
     const lastProcessedCars = await this.carModel
       .find({ postedAt: lastCar.postedAt })
+      .select({ postedAt: 1, url: 1 })
       .lean();
 
     this.logger.debug(`City ${city} platform ${platform}`, {

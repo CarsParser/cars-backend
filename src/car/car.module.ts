@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { CarRepository } from './car.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Car, CarSchema } from './car.entity';
@@ -15,7 +15,7 @@ import { City } from 'src/common';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Car.name, schema: CarSchema }]),
-    ProviderModule,
+    forwardRef(() => ProviderModule),
     PlatformsModule,
     ProxyModule,
     ConfigModule,
