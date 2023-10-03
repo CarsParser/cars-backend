@@ -54,7 +54,7 @@ export class CarProducerService {
         city: city,
       })
       .subscribe(async ({ platform, city }) => {
-        this.logger.debug(`Finished car loading for ${platform} city ${city}`);
+        this.logger.log(`Finished car loading for ${platform} city ${city}`);
         await unblock();
       });
   }

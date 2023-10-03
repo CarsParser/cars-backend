@@ -31,7 +31,7 @@ export class CarConsumerController {
       const heartbeat = context.getHeartbeat();
       interval = setInterval(heartbeat, 1500);
 
-      this.logger.debug('Loading cars', { data });
+      this.logger.log('Loading cars', { data });
 
       const providerRepository = this.providerFactory.create(data.platform);
       await providerRepository.loadCars(data.city);

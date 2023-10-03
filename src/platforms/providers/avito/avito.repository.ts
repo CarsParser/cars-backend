@@ -693,10 +693,10 @@ export class AvitoRepository implements ProviderRepository {
       if (currentCarIdExists) {
         return false;
       }
-    }
-
-    if (car.postUpdatedAt && car.postUpdatedAt < subMinutes(new Date(), 5)) {
-      return false;
+    } else {
+      if (car.postUpdatedAt && car.postUpdatedAt < subMinutes(new Date(), 5)) {
+        return false;
+      }
     }
 
     return true;
