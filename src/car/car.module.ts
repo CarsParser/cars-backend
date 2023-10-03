@@ -8,7 +8,6 @@ import { ProviderModule } from 'src/platforms/providers/provider.module';
 import { CarProducerService } from './car.producer.service';
 import { CarConsumerController } from './car.consumer.controller';
 import { PlatformsModule } from 'src/platforms/platforms.module';
-import { BlockerService } from 'src/helpers/blocker.service';
 import { ProxyModule } from 'src/proxy/proxy.module';
 import { City } from 'src/common';
 
@@ -22,7 +21,6 @@ import { City } from 'src/common';
   ],
   controllers: [CarConsumerController],
   providers: [
-    BlockerService,
     CarRepository,
     CarProducerService,
     {

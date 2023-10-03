@@ -3,17 +3,23 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { ClientKafka } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { City, Platform } from 'src/common';
-import { BlockerService } from 'src/helpers/blocker.service';
+import { BlockerFunction, blocker } from 'src/helpers';
+import Redis from 'ioredis';
 
 @Injectable()
 export class CarProducerService {
+  private blocker?: BlockerFunction;
   private readonly logger = new Logger(CarProducerService.name);
 
   constructor(
     @Inject('CAR_SERVICE') private client: ClientKafka,
     private configService: ConfigService,
-    private blockerService: BlockerService,
-  ) {}
+    @Inject('REDIS') private readonly redis: Redis,
+  ) {
+    if (!this.blocker) {
+      this.blocker = blocker({ redis: this.redis, prefix: 'app' });
+    }
+  }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
   async handleCron() {
@@ -27,22 +33,33 @@ export class CarProducerService {
 
     for (const platform of platforms) {
       for (const city of cities) {
-        const blocked = await this.blockerService.isBlocked(
-          `load_cars_${platform}_${city}`,
-        );
-
-        if (blocked) {
-          this.logger.debug(
-            `City ${city} platform ${platform} blocked ${blocked}`,
+        try {
+          const unblock = await this.blocker(
+            `load_cars_${platform}_${city}`,
+            60 * 5,
           );
-          continue;
-        }
-
-        this.client.emit('load_cars', {
-          platform: platform,
-          city: city,
-        });
+          this.send({ platform, city }, unblock);
+        } catch (err) {}
       }
     }
+  }
+
+  send(
+    { platform, city }: { platform: string; city: string },
+    unblock: () => Promise<void>,
+  ) {
+    this.client
+      .send('load_cars', {
+        platform: platform,
+        city: city,
+      })
+      .subscribe(async ({ platform, city }) => {
+        this.logger.debug(`Finished car loading for ${platform} city ${city}`);
+        await unblock();
+      });
+  }
+
+  onModuleInit() {
+    this.client.subscribeToResponseOf('load_cars');
   }
 }

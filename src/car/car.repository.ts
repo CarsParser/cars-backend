@@ -22,8 +22,8 @@ export class CarRepository {
     const { config: params } = user;
     const query = {
       postedAt: {
-        $gte: user.lastWatchedCar
-          ? new Date(user.lastWatchedCar).getTime()
+        $gte: user.lastWatchedCars?.lastWatchedCarDateTime
+          ? new Date(user.lastWatchedCars?.lastWatchedCarDateTime).getTime()
           : subMinutes(new Date(), 5),
       },
       city: {
@@ -95,7 +95,10 @@ export class CarRepository {
     return cars;
   }
 
-  async findLastProcessedCars(city: City, platform: Platform): Promise<(Pick<Car, 'postedAt' | 'url'>)[]> {
+  async findLastProcessedCars(
+    city: City,
+    platform: Platform,
+  ): Promise<Pick<Car, 'postedAt' | 'url'>[]> {
     const lastCar = await this.carModel
       .findOne({ city, platform })
       .sort({ postedAt: -1 })

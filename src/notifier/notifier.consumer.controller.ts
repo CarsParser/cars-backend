@@ -1,10 +1,9 @@
 import { Controller, Logger } from '@nestjs/common';
-import { EventPattern, Transport } from '@nestjs/microservices';
+import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
 import { CarRepository } from 'src/car/car.repository';
-import { BlockerService } from 'src/helpers/blocker.service';
 import { User } from 'src/user/user.entity';
 import { UserRepository } from '../user/user.repository';
-import { subSeconds } from 'date-fns';
+import { Car } from 'src/car/car.entity';
 
 @Controller('notification-consumer')
 export class NotifierConsumerController {
@@ -12,57 +11,64 @@ export class NotifierConsumerController {
 
   constructor(
     private carsRepository: CarRepository,
-    private blockerService: BlockerService,
     private userRepository: UserRepository,
   ) {}
 
-  @EventPattern('cars_notification', Transport.KAFKA)
-  async handleCarsNotifications(user: User) {
-    const blockKey = `notify_${user.id}`;
-
+  @MessagePattern('cars_notification', Transport.KAFKA)
+  async handleCarsNotifications(@Payload() user: User) {
     try {
-      const isBlocked = await this.blockerService.block(blockKey, 2 * 60);
-      if (isBlocked) {
-        this.logger.log(`Cars notifications blocked userId ${user.id}`);
-        return;
-      }
-
       this.logger.debug('Notify user', user);
 
       const carsToOffer = await this.carsRepository.find(user);
+      let carsToOfferFiltered: Car[] = carsToOffer;
 
       this.logger.debug(
-        `Found cars for user ${user.id}, last watched car is ${user.lastWatchedCar}`,
+        `Found cars for user ${user.id}, last watched car is ${user.lastWatchedCars?.lastWatchedCarDateTime}`,
         carsToOffer,
       );
 
       if (carsToOffer.length) {
-        await this.userRepository.sendTg(user.id, carsToOffer);
-
-        user.lastWatchedCar = subSeconds(
-          carsToOffer.sort((a, b) => {
-            if (!b.postedAt) {
-              return -1;
-            }
-            if (!a.postedAt) {
-              return 1;
-            }
-            return b.postedAt.getTime() - a.postedAt.getTime();
-          })[0].postedAt,
-          -1,
-        );
-        await this.userRepository.update(user);
+        if (user.lastWatchedCars?.lastWatchedCarIds) {
+          carsToOfferFiltered = carsToOffer.filter(
+            (car) => !user.lastWatchedCars.lastWatchedCarIds.includes(car.url),
+          );
+        }
         this.logger.debug(
-          `Last watched car was updated: ${user.lastWatchedCar}`,
+          `Found cars for user ${user.id} filtered`,
+          carsToOfferFiltered,
         );
+
+        await this.userRepository.sendTg(user.id, carsToOfferFiltered);
+
+        const lastWatchedCarDateTime = carsToOffer.sort((a, b) => {
+          if (!b.postedAt) {
+            return -1;
+          }
+          if (!a.postedAt) {
+            return 1;
+          }
+          return b.postedAt.getTime() - a.postedAt.getTime();
+        })[0].postedAt;
+        const lastWatchedCarIds = carsToOffer
+          .filter((car) => car.postedAt === lastWatchedCarDateTime)
+          .map((car) => car.url);
+        user.lastWatchedCars = {
+          lastWatchedCarDateTime,
+          lastWatchedCarIds,
+        };
+        this.logger.debug(`User ${user.id} last watched cars`, {
+          lastWatchedCars: user.lastWatchedCars,
+        });
+        await this.userRepository.update(user);
       }
 
-      // TODO: send to bot
+      return {
+        userId: user.id,
+        sentCarIds: carsToOfferFiltered.map((car) => car.url),
+      };
     } catch (err) {
       this.logger.error(`Unable to notify user ${user.id} about new cars`, err);
       throw err;
-    } finally {
-      await this.blockerService.unblock(blockKey);
     }
   }
 }

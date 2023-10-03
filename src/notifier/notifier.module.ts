@@ -4,15 +4,12 @@ import { UserModule } from '../user/user.module';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NotifierConsumerController } from './notifier.consumer.controller';
-import { BlockerService } from 'src/helpers/blocker.service';
 import { CarModule } from 'src/car/car.module';
 
 @Module({
   imports: [UserModule, CarModule, ConfigModule],
   controllers: [NotifierConsumerController],
   providers: [
-    BlockerService,
-    BlockerService,
     NotifierProducerService,
     {
       provide: 'NOTIFIER_SERVICE',

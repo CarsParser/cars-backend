@@ -132,6 +132,14 @@ export class Config {
   wheels: Wheel[];
 }
 
+export class LastWatchedCars {
+  @Prop({ required: true })
+  lastWatchedCarDateTime: Date;
+
+  @Prop({ required: true, type: () => [String] })
+  lastWatchedCarIds: string[];
+}
+
 @Schema({
   autoIndex: true,
 })
@@ -145,8 +153,8 @@ export class User {
   @Prop({ default: true, required: true })
   monitor: boolean;
 
-  @Prop({})
-  lastWatchedCar?: Date;
+  @Prop({ type: () => LastWatchedCars })
+  lastWatchedCars?: LastWatchedCars;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
