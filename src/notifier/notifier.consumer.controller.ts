@@ -20,7 +20,7 @@ export class NotifierConsumerController {
       this.logger.debug('Notify user', user);
 
       const carsToOffer = await this.carsRepository.find(user);
-      let carsToOfferFiltered: Car[] = carsToOffer;
+      let carsToOfferFiltered: Car[] = JSON.parse(JSON.stringify(carsToOffer));
 
       this.logger.debug(
         `Found cars for user ${user.id}, last watched car is ${user.lastWatchedCars?.lastWatchedCarDateTime}`,
@@ -28,7 +28,7 @@ export class NotifierConsumerController {
       );
 
       if (carsToOffer.length) {
-        if (user.lastWatchedCars?.lastWatchedCarIds) {
+        if (user.lastWatchedCars?.lastWatchedCarIds?.length) {
           carsToOfferFiltered = carsToOffer.filter(
             (car) => !user.lastWatchedCars.lastWatchedCarIds.includes(car.url),
           );
