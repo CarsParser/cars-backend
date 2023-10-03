@@ -1,4 +1,4 @@
-import { Injectable, Logger, Scope } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as seleniumWebdriver from 'selenium-webdriver';
 import { By, ThenableWebDriver, WebElement, until } from 'selenium-webdriver';
@@ -33,12 +33,9 @@ interface AvitoPartialCar {
   city: City;
 }
 
-@Injectable({ scope: Scope.TRANSIENT })
+@Injectable()
 export class AvitoRepository implements ProviderRepository {
   private readonly logger = new Logger(AvitoRepository.name);
-  private driver: ThenableWebDriver;
-  private proxy?: Proxy;
-  private originalWindow?: string;
   private avitoCityMapper: { [key in City]: string } = {
     [City.spb]: 'sankt_peterburg_i_lo',
     [City.msk]: 'moskva_i_mo',
@@ -57,13 +54,14 @@ export class AvitoRepository implements ProviderRepository {
   ) {}
 
   async loadCars(city: City) {
+    let proxy: Proxy | undefined = await this.proxyRepository.get();
+    const driver = this.initDriver(proxy);
     try {
-      this.proxy = await this.proxyRepository.get();
       this.logger.debug(`Loading cars for avito, city ${city}`, {
-        proxy: this.proxy,
+        proxy,
       });
-      this.initDriver(proxy);
-      const partialCars = await this.getPartialCars(city);
+
+      const partialCars = await this.getPartialCars(driver, city);
       const partialCarsReverseOrder = partialCars.sort((a, b) => {
         return a.postUpdatedAt.getTime() - b.postUpdatedAt.getTime();
       });
@@ -72,10 +70,14 @@ export class AvitoRepository implements ProviderRepository {
         partialCars,
         partialCarsReverseOrder,
       );
-      this.originalWindow = await this.driver.getWindowHandle();
+      const originalWindow = await driver.getWindowHandle();
 
       for (const partialCar of partialCarsReverseOrder) {
-        const car = await this.getFullCarInfo(partialCar);
+        const car = await this.getFullCarInfo(
+          driver,
+          partialCar,
+          originalWindow,
+        );
         this.logger.debug(`Car loaded for avito, city ${city}`, car);
         await this.carRepository.save([car]);
       }
@@ -83,14 +85,14 @@ export class AvitoRepository implements ProviderRepository {
       this.logger.error('Error finding cars', err);
       throw err;
     } finally {
-      if (this.proxy) {
+      if (proxy) {
         this.logger.debug(`Adding proxy back avito, city ${city}`, {
-          proxy: this.proxy,
+          proxy,
         });
-        await this.proxyRepository.add(this.proxy);
+        await this.proxyRepository.add(proxy);
       }
 
-      await this.driver?.close();
+      await driver?.close();
     }
   }
 
@@ -114,9 +116,11 @@ export class AvitoRepository implements ProviderRepository {
     return true;
   }
 
-  private async getBrandAndModel(): Promise<[string, string]> {
+  private async getBrandAndModel(
+    driver: ThenableWebDriver,
+  ): Promise<[string, string]> {
     try {
-      const navigationElement = await this.driver.findElement(
+      const navigationElement = await driver.findElement(
         By.css('div[data-marker="item-navigation"]'),
       );
       const navigationDescriptionElements =
@@ -132,9 +136,9 @@ export class AvitoRepository implements ProviderRepository {
     }
   }
 
-  private async getSellerType(): Promise<Seller> {
+  private async getSellerType(driver: ThenableWebDriver): Promise<Seller> {
     try {
-      const sellerInfo = await this.driver
+      const sellerInfo = await driver
         .findElement(By.css('div[data-marker="seller-info/label"]'))
         .getText();
 
@@ -151,7 +155,7 @@ export class AvitoRepository implements ProviderRepository {
       }
     } catch (err) {
       try {
-        const sellerInfo = await this.driver
+        const sellerInfo = await driver
           .findElement(By.css('div[data-marker="seller-info/name"]'))
           .getText();
         if (sellerInfo.includes('Официальный дилер')) {
@@ -165,9 +169,11 @@ export class AvitoRepository implements ProviderRepository {
     }
   }
 
-  private async getPostTimestamp(): Promise<Date | null> {
+  private async getPostTimestamp(
+    driver: ThenableWebDriver,
+  ): Promise<Date | null> {
     try {
-      const postedAtString = await this.driver
+      const postedAtString = await driver
         .findElement(By.css('span[data-marker="item-view/item-date"]'))
         .getText();
 
@@ -229,9 +235,9 @@ export class AvitoRepository implements ProviderRepository {
     }
   }
 
-  private async getImage(): Promise<string> {
+  private async getImage(driver: ThenableWebDriver): Promise<string> {
     try {
-      const galeryElement = await this.driver.findElement(
+      const galeryElement = await driver.findElement(
         By.css('div[data-marker="item-view/gallery"]'),
       );
       const image = await galeryElement
@@ -243,9 +249,13 @@ export class AvitoRepository implements ProviderRepository {
       return 'https://avito.ru';
     }
   }
-  private async getCostDifference(price: number): Promise<number> {
+
+  private async getCostDifference(
+    driver: ThenableWebDriver,
+    price: number,
+  ): Promise<number> {
     try {
-      const lowestPrice = await this.driver
+      const lowestPrice = await driver
         .findElement(
           By.css('span[class="styles-subtitle-_GzPh desktop-1760830"]'),
         )
@@ -262,19 +272,19 @@ export class AvitoRepository implements ProviderRepository {
     return 0;
   }
 
-  private async getPhoneNumber(): Promise<string> {
+  private async getPhoneNumber(driver: ThenableWebDriver): Promise<string> {
     try {
-      const button = await this.driver.findElement(
+      const button = await driver.findElement(
         By.css('button[data-marker="item-phone-button/card"]'),
       );
       await button.click();
-      await this.driver.wait(
+      await driver.wait(
         until.elementLocated(
           By.css('img[data-marker="phone-popup/phone-image"]'),
         ),
         15_000,
       );
-      const numberPict = await this.driver
+      const numberPict = await driver
         .findElement(By.css('img[data-marker="phone-popup/phone-image"]'))
         .getAttribute('src');
       const {
@@ -292,20 +302,27 @@ export class AvitoRepository implements ProviderRepository {
     }
   }
 
-  private async getFullCarInfo(partialCar: AvitoPartialCar): Promise<Car> {
+  private async getFullCarInfo(
+    driver: ThenableWebDriver,
+    partialCar: AvitoPartialCar,
+    originalWindow: string,
+  ): Promise<Car> {
     this.logger.debug(`Loading full car info for avito`, partialCar);
 
-    await this.driver.switchTo().newWindow('tab');
-    await this.getPage(partialCar.url);
+    await driver.switchTo().newWindow('tab');
+    await this.getPage(driver, partialCar.url);
 
-    const imageUrl = await this.getImage();
-    const [brand, model] = await this.getBrandAndModel();
-    const postedAt = await this.getPostTimestamp();
-    const seller = await this.getSellerType();
+    const imageUrl = await this.getImage(driver);
+    const [brand, model] = await this.getBrandAndModel(driver);
+    const postedAt = await this.getPostTimestamp(driver);
+    const seller = await this.getSellerType(driver);
     const newAdd = this.isNewAdd(postedAt, partialCar.postUpdatedAt);
-    const costDifference = await this.getCostDifference(partialCar.price);
+    const costDifference = await this.getCostDifference(
+      driver,
+      partialCar.price,
+    );
 
-    const carCharacteristicsElement = await this.driver.findElement(
+    const carCharacteristicsElement = await driver.findElement(
       By.css('div[data-marker="item-view/item-params"]'),
     );
 
@@ -580,9 +597,13 @@ export class AvitoRepository implements ProviderRepository {
       }
     }
 
-    const phone = await this.getPhoneNumber();
-    await this.driver.close();
-    await this.driver.switchTo().window(this.originalWindow);
+    let phone: string = 'UNKNOWN';
+    if (!this.configService.get('SKIP_PHONE_NUMBER')) {
+      phone = await this.getPhoneNumber(driver);
+    }
+
+    await driver.close();
+    await driver.switchTo().window(originalWindow);
 
     return {
       back,
@@ -612,7 +633,10 @@ export class AvitoRepository implements ProviderRepository {
     };
   }
 
-  private async getPartialCars(city: City): Promise<AvitoPartialCar[]> {
+  private async getPartialCars(
+    driver: ThenableWebDriver,
+    city: City,
+  ): Promise<AvitoPartialCar[]> {
     const lastProcessedCars = await this.carRepository.findLastProcessedCars(
       city,
       Platform.avito,
@@ -620,8 +644,8 @@ export class AvitoRepository implements ProviderRepository {
     const partialCars: AvitoPartialCar[] = [];
     for (let page = 1; page <= 100; page++) {
       const pageUrl = this.getUrl(city, page);
-      await this.getPage(pageUrl);
-      const carElements = await this.driver.findElements(
+      await this.getPage(driver, pageUrl);
+      const carElements = await driver.findElements(
         By.css('div[data-marker="item"]'),
       );
 
@@ -747,20 +771,20 @@ export class AvitoRepository implements ProviderRepository {
     }
   }
 
-  private async getPage(url: string) {
-    await this.driver.get(url);
-    const isBlocked = await this.isBlocked();
+  private async getPage(driver: ThenableWebDriver, url: string) {
+    await driver.get(url);
+    const isBlocked = await this.isBlocked(driver);
 
     if (isBlocked) {
       await sleep(10_000);
 
-      await this.driver.close();
-      await this.driver.switchTo().newWindow('window');
+      await driver.close();
+      await driver.switchTo().newWindow('window');
     }
   }
 
-  private async isBlocked(): Promise<boolean> {
-    const title = await this.driver.getTitle();
+  private async isBlocked(driver: ThenableWebDriver): Promise<boolean> {
+    const title = await driver.getTitle();
     this.logger.debug(`Page title ${title}`);
 
     if (title.toLocaleLowerCase().includes('доступ ограничен')) {
@@ -781,7 +805,7 @@ export class AvitoRepository implements ProviderRepository {
     return url.toString();
   }
 
-  private initDriver(proxyObject?: Proxy) {
+  private initDriver(proxyObject?: Proxy): ThenableWebDriver {
     const capabilities = seleniumWebdriver.Capabilities.chrome();
     const options = new chrome.Options()
       .headless()
@@ -811,6 +835,6 @@ export class AvitoRepository implements ProviderRepository {
       driverBuilder.setProxy(proxy.manual({ http: httpProxy }));
     }
 
-    this.driver = driverBuilder.build();
+    return driverBuilder.build();
   }
 }

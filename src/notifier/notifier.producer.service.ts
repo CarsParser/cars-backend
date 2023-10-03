@@ -14,7 +14,7 @@ export class NotifierProducerService {
     private configService: ConfigService,
   ) {}
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_5_SECONDS)
   async handleCron() {
     if (!this.configService.get('HIDDEN')) {
       return;
