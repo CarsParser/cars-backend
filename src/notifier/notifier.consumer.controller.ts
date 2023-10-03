@@ -4,6 +4,7 @@ import { CarRepository } from 'src/car/car.repository';
 import { User } from 'src/user/user.entity';
 import { UserRepository } from '../user/user.repository';
 import { Car } from 'src/car/car.entity';
+import { isEqual } from 'date-fns';
 
 @Controller('notification-consumer')
 export class NotifierConsumerController {
@@ -50,7 +51,7 @@ export class NotifierConsumerController {
           return b.postedAt.getTime() - a.postedAt.getTime();
         })[0].postedAt;
         const lastWatchedCarIds = carsToOffer
-          .filter((car) => car.postedAt === lastWatchedCarDateTime)
+          .filter((car) => isEqual(car.postedAt, lastWatchedCarDateTime))
           .map((car) => car.url);
         user.lastWatchedCars = {
           lastWatchedCarDateTime,

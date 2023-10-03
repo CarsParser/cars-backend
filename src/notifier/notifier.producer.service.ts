@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { UserRepository } from '../user/user.repository';
 import { ClientKafka } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
@@ -24,7 +24,7 @@ export class NotifierProducerService {
     }
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron('*/15 * * * * *')
   async handleCron() {
     if (!this.configService.get('HIDDEN')) {
       return;
