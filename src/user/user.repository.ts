@@ -151,7 +151,7 @@ export class UserRepository {
     let costDifference: string = '';
 
     if (car.costDifference === 0) {
-      costDifference = 'нет информации';
+      costDifference = 'Нет информации о рыночной стоимости';
     } else if (car.costDifference > 0) {
       costDifference = `🟡 Выше минимальной цены на: ${car.costDifference}`;
     } else {
@@ -164,7 +164,7 @@ export class UserRepository {
       car.mileage
     }km</a></b>%0A<b>💰 Цена: ${
       car.price
-    } ₽</b>%0A🛠 <b>Параметры:</b>%0A<i>- Мощность двигателя: ${
+    } ₽</b>%0A${costDifference}%0A🛠 <b>Параметры:</b>%0A<i>- Мощность двигателя: ${
       car.enginePower
     } л.с.%0A- Обьем двигателя: ${car.engineVolume} л.%0A- Тип двигателя: ${
       botEngineType[car.engineType]
@@ -176,7 +176,7 @@ export class UserRepository {
       car.ownersCount
     }%0A- Состояние: ${botCondition[car.condition]}%0A- Тип кузова: ${
       botBackType[car.back]
-    }%0A- Разница в цене: ${costDifference}</i>%0A👤 <b>Продавец:</b> ${
+    }</i>%0A👤 <b>Продавец:</b> ${
       botSeller[car.seller]
     }%0A🌏 <b>Город:</b> ${botCity[car.city]}%0A✅ <b>Ссылка:</b> ${
       car.url
