@@ -17,24 +17,6 @@ import { CarModule } from 'src/car/car.module';
         return ClientProxyFactory.create({
           transport: Transport.KAFKA,
           options: {
-            producer: {
-              createPartitioner:
-                () =>
-                ({ topic, message }) => {
-                  if (topic === 'cars_notification') {
-                    const user = JSON.parse(message.value as string);
-
-                    return (
-                      user.id
-                        .split('')
-                        .map((c) => c.toUpperCase().charCodeAt(0))
-                        .reduce((prev, curr) => prev + curr, 0) % 10
-                    );
-                  }
-
-                  return 0;
-                },
-            },
             client: {
               clientId: 'cars',
               brokers: [

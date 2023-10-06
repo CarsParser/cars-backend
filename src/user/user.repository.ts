@@ -122,12 +122,24 @@ export class UserRepository {
   }
 
   async create(user: UserDTO) {
+    const userToCreate = user as User;
+    userToCreate.lastWatchedCars = {
+      lastWatchedCarDateTime: new Date(),
+      lastWatchedCarIds: [],
+    };
     const createdUser = await this.userModel.create(user);
 
     this.logger.debug('User created', createdUser);
   }
 
   async update(user: UserUpdateDTO) {
+    let userToUpdate = user as User;
+    if (user.monitor) {
+      userToUpdate.lastWatchedCars = {
+        lastWatchedCarDateTime: new Date(),
+        lastWatchedCarIds: [],
+      };
+    }
     const updateResults = await this.userModel.updateOne({ id: user.id }, user);
 
     this.logger.debug(`User ${user.id} updated`, updateResults);
@@ -176,9 +188,9 @@ export class UserRepository {
       car.ownersCount
     }%0A- Состояние: ${botCondition[car.condition]}%0A- Тип кузова: ${
       botBackType[car.back]
-    }</i>%0A👤 <b>Продавец:</b> ${
-      botSeller[car.seller]
-    }%0A🌏 <b>Город:</b> ${botCity[car.city]}%0A✅ <b>Ссылка:</b> ${
+    }</i>%0A👤 <b>Продавец:</b> ${botSeller[car.seller]}%0A🌏 <b>Город:</b> ${
+      botCity[car.city]
+    }%0A✅ <b>Ссылка:</b> ${
       car.url
     }%0A⏱ <b>Время получения:</b> ${formatInTimeZone(
       car.postedAt,
