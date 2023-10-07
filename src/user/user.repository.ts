@@ -165,9 +165,9 @@ export class UserRepository {
     if (car.costDifference === 0) {
       costDifference = 'Нет информации о рыночной стоимости';
     } else if (car.costDifference > 0) {
-      costDifference = `🟡 Выше минимальной цены на: ${car.costDifference}`;
+      costDifference = `🟡 Выше минимальной цены на: ${car.costDifference}₽`;
     } else {
-      costDifference = `🟢 Ниже минимальной цены на: ${-car.costDifference}`;
+      costDifference = `🟢 Ниже минимальной цены на: ${-car.costDifference}₽`;
     }
 
     let template = `<b><a href="${car.url}">${car.brand} ${car.model}, ${
