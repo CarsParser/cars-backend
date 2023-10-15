@@ -20,8 +20,6 @@ export class ElkLogger {
     payload: any = {},
     log_level: LogLevel = LogLevel.MEDIUM,
   ) {
-    const payloadObject =
-      _.isArray(payload) || typeof payload === 'string' ? { payload } : payload;
     const logObject = {
       service_name,
       logger_type: 'SERVICE_LOGGER',
@@ -38,7 +36,7 @@ export class ElkLogger {
       console.log(
         stringify(
           {
-            ...payloadObject,
+            payload,
             ...logObject,
           },
           //@ts-ignore
@@ -54,7 +52,7 @@ export class ElkLogger {
         } `,
         stringify(
           {
-            ...payloadObject,
+            payload,
           },
           //@ts-ignore
           { cycles: true },
