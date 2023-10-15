@@ -38,6 +38,7 @@ export class CarRepository {
       model: {
         $in: params.models,
       },
+      newAdd: params.newAdds,
       price: {
         $gte: params.price.min,
         $lte: params.price.max,

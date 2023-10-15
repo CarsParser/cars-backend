@@ -101,7 +101,7 @@ const botCity: { [key in City]: string } = {
 };
 
 interface IFindParams {
-  monitor: boolean;
+  id: string;
 }
 
 @Injectable()
@@ -113,12 +113,23 @@ export class UserRepository {
     private httpService: HttpService,
   ) {}
 
-  async find(params: IFindParams): Promise<User[]> {
-    const users = (await this.userModel.find(params).lean()) as User[];
+  async findUserIdsToNotify(): Promise<string[]> {
+    const users = await this.userModel
+      .find({ monitor: true })
+      .select({ id: 1 })
+      .lean();
+    const userIds = users.map((user) => user.id);
+    this.logger.debug('User ids to notify', userIds);
 
-    this.logger.debug('Users found', users);
+    return userIds;
+  }
 
-    return users;
+  async findOne(params: IFindParams): Promise<User> {
+    const user = (await this.userModel.findOne(params).lean()) as User;
+
+    this.logger.debug('Users found', user);
+
+    return user;
   }
 
   async create(user: UserDTO) {
@@ -134,7 +145,11 @@ export class UserRepository {
 
   async update(user: UserUpdateDTO) {
     let userToUpdate = user as User;
-    if (user.monitor) {
+    const userMonitor = await this.userModel
+      .findOne({ id: user.id })
+      .select({ monitor: 1 })
+      .lean();
+    if (userMonitor.monitor !== user.monitor) {
       userToUpdate.lastWatchedCars = {
         lastWatchedCarDateTime: new Date(),
         lastWatchedCarIds: [],

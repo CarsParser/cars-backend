@@ -130,6 +130,9 @@ export class Config {
 
   @Prop({ required: true, default: [Wheel.right], type: () => [Wheel] })
   wheels: Wheel[];
+
+  @Prop({ required: true, default: false })
+  newAdds: boolean;
 }
 
 export class LastWatchedCars {

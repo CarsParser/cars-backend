@@ -30,22 +30,19 @@ export class NotifierProducerService {
       return;
     }
 
-    const users = await this.userRepository.find({ monitor: true });
+    const userIds = await this.userRepository.findUserIdsToNotify();
 
-    this.logger.log(
-      'Notify users',
-      users.map((user) => user.id),
-    );
+    this.logger.log('Notify users', userIds);
 
-    for (const user of users) {
+    for (const userId of userIds) {
       try {
-        const unblock = await this.blocker(`notify_${user.id}`, 60);
-        this.send(user, unblock);
+        const unblock = await this.blocker(`notify_${userId}`, 60);
+        this.send({ id: userId }, unblock);
       } catch (err) {}
     }
   }
 
-  send(data: User, unblock: () => Promise<void>) {
+  send(data: { id: string }, unblock: () => Promise<void>) {
     this.client
       .send('cars_notification', data)
       .subscribe(async ({ userId, sentCarIds }) => {

@@ -16,8 +16,15 @@ export class NotifierConsumerController {
   ) {}
 
   @MessagePattern('cars_notification', Transport.KAFKA)
-  async handleCarsNotifications(@Payload() user: User) {
+  async handleCarsNotifications(@Payload() userId: { id: string }) {
     try {
+      const user = await this.userRepository.findOne({ id: userId.id });
+      if (!user.monitor) {
+        return {
+          userId: user.id,
+          sentCarIds: [],
+        };
+      }
       this.logger.debug('Notify user', user);
 
       const carsToOffer = await this.carsRepository.find(user);
@@ -39,28 +46,30 @@ export class NotifierConsumerController {
           carsToOfferFiltered,
         );
 
-        await this.userRepository.sendTg(user.id, carsToOfferFiltered);
+        if (carsToOfferFiltered.length) {
+          await this.userRepository.sendTg(user.id, carsToOfferFiltered);
 
-        const lastWatchedCarDateTime = carsToOffer.sort((a, b) => {
-          if (!b.postedAt) {
-            return -1;
-          }
-          if (!a.postedAt) {
-            return 1;
-          }
-          return b.postedAt.getTime() - a.postedAt.getTime();
-        })[0].postedAt;
-        const lastWatchedCarIds = carsToOffer
-          .filter((car) => isEqual(car.postedAt, lastWatchedCarDateTime))
-          .map((car) => car.url);
-        user.lastWatchedCars = {
-          lastWatchedCarDateTime,
-          lastWatchedCarIds,
-        };
-        this.logger.debug(`User ${user.id} last watched cars`, {
-          lastWatchedCars: user.lastWatchedCars,
-        });
-        await this.userRepository.update(user);
+          const lastWatchedCarDateTime = carsToOffer.sort((a, b) => {
+            if (!b.postedAt) {
+              return -1;
+            }
+            if (!a.postedAt) {
+              return 1;
+            }
+            return b.postedAt.getTime() - a.postedAt.getTime();
+          })[0].postedAt;
+          const lastWatchedCarIds = carsToOffer
+            .filter((car) => isEqual(car.postedAt, lastWatchedCarDateTime))
+            .map((car) => car.url);
+          user.lastWatchedCars = {
+            lastWatchedCarDateTime,
+            lastWatchedCarIds,
+          };
+          this.logger.debug(`User ${user.id} last watched cars`, {
+            lastWatchedCars: user.lastWatchedCars,
+          });
+          await this.userRepository.update(user);
+        }
       }
 
       return {
@@ -68,7 +77,10 @@ export class NotifierConsumerController {
         sentCarIds: carsToOfferFiltered.map((car) => car.url),
       };
     } catch (err) {
-      this.logger.error(`Unable to notify user ${user.id} about new cars`, err);
+      this.logger.error(
+        `Unable to notify user ${userId.id} about new cars`,
+        err,
+      );
       throw err;
     }
   }

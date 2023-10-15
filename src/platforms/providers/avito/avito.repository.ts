@@ -31,6 +31,7 @@ interface AvitoPartialCar {
   price: number;
   postUpdatedAt: Date;
   city: City;
+  newAdd: boolean;
 }
 
 @Injectable()
@@ -96,24 +97,14 @@ export class AvitoRepository implements ProviderRepository {
     }
   }
 
-  private isNewAdd(postedAt: Date, updatedAt: Date): boolean {
-    const daysDiff = updatedAt.getDate() - postedAt.getDate();
-    const hoursdiff = updatedAt.getHours() - postedAt.getHours();
-    const minutesDiff = updatedAt.getMinutes() - postedAt.getMinutes();
+  private async isNewAdd(carElement: WebElement): Promise<boolean> {
+    try {
+      await carElement.findElement(By.className('styles-redesign-YLctS'));
 
-    if (daysDiff) {
       return false;
+    } catch (_) {
+      return true;
     }
-
-    if (hoursdiff) {
-      return false;
-    }
-
-    if (minutesDiff >= 10 || minutesDiff <= -10) {
-      return false;
-    }
-
-    return true;
   }
 
   private async getBrandAndModel(
@@ -316,7 +307,6 @@ export class AvitoRepository implements ProviderRepository {
     const [brand, model] = await this.getBrandAndModel(driver);
     const postedAt = await this.getPostTimestamp(driver);
     const seller = await this.getSellerType(driver);
-    const newAdd = this.isNewAdd(postedAt, partialCar.postUpdatedAt);
     const costDifference = await this.getCostDifference(
       driver,
       partialCar.price,
@@ -619,11 +609,11 @@ export class AvitoRepository implements ProviderRepository {
       imageUrl,
       mileage: millage,
       model,
-      newAdd,
+      newAdd: partialCar.newAdd,
       ownersCount,
       phone,
       platform: Platform.avito,
-      postedAt: newAdd ? postedAt : partialCar.postUpdatedAt,
+      postedAt: partialCar.newAdd ? postedAt : partialCar.postUpdatedAt,
       price: partialCar.price,
       seller,
       transmission,
@@ -660,7 +650,8 @@ export class AvitoRepository implements ProviderRepository {
         }
         const price = await this.getCarPrice(carElement);
         const postUpdatedAt = await this.getCarPostUpdatedAt(carElement);
-        const newPartialCar = { url, price, postUpdatedAt, city };
+        const newAdd = await this.isNewAdd(carElement);
+        const newPartialCar = { url, price, postUpdatedAt, city, newAdd };
 
         if (!this.isNewCar(lastProcessedCars, newPartialCar)) {
           return partialCars;

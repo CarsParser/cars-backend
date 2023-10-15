@@ -265,6 +265,13 @@ export class Config {
   @IsEnum(Wheel, { each: true })
   @ArrayMinSize(1)
   wheels: Wheel[];
+
+  @ApiProperty({
+    default: false,
+    description: 'To watch new add or all',
+  })
+  @IsBoolean()
+  newAdds: boolean;
 }
 
 export class UserDTO {
