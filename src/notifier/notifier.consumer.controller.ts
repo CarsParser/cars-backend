@@ -1,18 +1,19 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
 import { CarRepository } from 'src/car/car.repository';
 import { User } from 'src/user/user.entity';
 import { UserRepository } from '../user/user.repository';
 import { Car } from 'src/car/car.entity';
 import { isEqual } from 'date-fns';
+import { ElkLogger } from 'src/helpers';
+import { LogLevel } from 'src/helpers/logger';
 
 @Controller('notification-consumer')
 export class NotifierConsumerController {
-  private readonly logger = new Logger(NotifierConsumerController.name);
-
   constructor(
     private carsRepository: CarRepository,
     private userRepository: UserRepository,
+    private elkLogger: ElkLogger,
   ) {}
 
   @MessagePattern('cars_notification', Transport.KAFKA)
@@ -25,15 +26,20 @@ export class NotifierConsumerController {
           sentCarIds: [],
         };
       }
-      this.logger.debug('Notify user', user);
+      this.elkLogger.log(
+        NotifierConsumerController.name,
+        'notify user',
+        user,
+        LogLevel.MEDIUM,
+      );
 
       const carsToOffer = await this.carsRepository.find(user);
       let carsToOfferFiltered: Car[] = JSON.parse(JSON.stringify(carsToOffer));
 
-      this.logger.debug(
-        `Found cars for user ${user.id}, last watched car is ${user.lastWatchedCars?.lastWatchedCarDateTime}`,
+      this.elkLogger.log(NotifierConsumerController.name, 'cars to offer', {
         carsToOffer,
-      );
+        user,
+      });
 
       if (carsToOffer.length) {
         if (user.lastWatchedCars?.lastWatchedCarIds?.length) {
@@ -41,9 +47,13 @@ export class NotifierConsumerController {
             (car) => !user.lastWatchedCars.lastWatchedCarIds.includes(car.url),
           );
         }
-        this.logger.debug(
-          `Found cars for user ${user.id} filtered`,
-          carsToOfferFiltered,
+        this.elkLogger.log(
+          NotifierConsumerController.name,
+          'filtered cars to offer',
+          {
+            carsToOfferFiltered,
+            user,
+          },
         );
 
         if (carsToOfferFiltered.length) {
@@ -65,9 +75,13 @@ export class NotifierConsumerController {
             lastWatchedCarDateTime,
             lastWatchedCarIds,
           };
-          this.logger.debug(`User ${user.id} last watched cars`, {
-            lastWatchedCars: user.lastWatchedCars,
-          });
+          this.elkLogger.log(
+            NotifierConsumerController.name,
+            'user last watched cars',
+            {
+              lastWatchedCars: user.lastWatchedCars,
+            },
+          );
           await this.userRepository.update(user);
         }
       }
@@ -77,9 +91,11 @@ export class NotifierConsumerController {
         sentCarIds: carsToOfferFiltered.map((car) => car.url),
       };
     } catch (err) {
-      this.logger.error(
-        `Unable to notify user ${userId.id} about new cars`,
+      this.elkLogger.error(
+        NotifierConsumerController.name,
+        'unable to nofity user',
         err,
+        LogLevel.HIGH,
       );
       throw err;
     }

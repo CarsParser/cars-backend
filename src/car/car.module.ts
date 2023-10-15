@@ -10,6 +10,8 @@ import { CarConsumerController } from './car.consumer.controller';
 import { PlatformsModule } from 'src/platforms/platforms.module';
 import { ProxyModule } from 'src/proxy/proxy.module';
 import { City } from 'src/common';
+import { CarsCleanerService } from './cars.cleaner.service';
+import { ElkLogger } from 'src/helpers';
 
 @Module({
   imports: [
@@ -21,7 +23,9 @@ import { City } from 'src/common';
   ],
   controllers: [CarConsumerController],
   providers: [
+    ElkLogger,
     CarRepository,
+    CarsCleanerService,
     CarProducerService,
     {
       provide: 'CAR_SERVICE',

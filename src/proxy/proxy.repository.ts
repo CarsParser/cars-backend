@@ -1,5 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
+import { ElkLogger } from 'src/helpers';
 
 export interface Proxy {
   host: string;
@@ -18,12 +19,14 @@ function sleep(time: number) {
 @Injectable()
 export class ProxyRepository {
   private readonly proxyListKey: string = 'proxy';
-  private readonly logger = new Logger(ProxyRepository.name);
 
-  constructor(@Inject('REDIS') private redis: Redis) {}
+  constructor(
+    @Inject('REDIS') private redis: Redis,
+    private elkLogger: ElkLogger,
+  ) {}
 
   async add(proxy: Proxy) {
-    this.logger.debug('Adding proxy', proxy);
+    this.elkLogger.log(ProxyRepository.name, 'adding proxy', proxy);
 
     await this.redis.rpush(this.proxyListKey, JSON.stringify(proxy));
   }
@@ -47,17 +50,13 @@ export class ProxyRepository {
   async find(): Promise<Proxy[]> {
     const proxyList = await this.redis.lrange(this.proxyListKey, 0, -1);
 
-    this.logger.debug(
-      'Find proxy',
-      proxyList.map((proxy) => JSON.parse(proxy)),
-    );
+    this.elkLogger.log(ProxyRepository.name, 'found proxies', proxyList);
 
     return proxyList.map((proxy) => JSON.parse(proxy));
   }
 
   async delete(proxy: Proxy) {
-    this.logger.debug('Delete proxy', proxy);
-
     await this.redis.lrem(this.proxyListKey, 0, JSON.stringify(proxy));
+    this.elkLogger.log(ProxyRepository.name, 'delete proxy', proxy);
   }
 }

@@ -1,4 +1,5 @@
-import { Controller, Logger } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
+import { ElkLogger } from 'src/helpers';
 import {
   Ctx,
   KafkaContext,
@@ -8,6 +9,7 @@ import {
 } from '@nestjs/microservices';
 import { City, Platform } from 'src/common';
 import { ProviderFactory } from 'src/platforms/providers/provider.factory';
+import { LogLevel } from 'src/helpers/logger';
 
 export interface Data {
   platform: Platform;
@@ -16,9 +18,10 @@ export interface Data {
 
 @Controller('car-consumer')
 export class CarConsumerController {
-  private readonly logger = new Logger(CarConsumerController.name);
-
-  constructor(private providerFactory: ProviderFactory) {}
+  constructor(
+    private providerFactory: ProviderFactory,
+    private elkLogger: ElkLogger,
+  ) {}
 
   @MessagePattern('load_cars', Transport.KAFKA)
   async handleCarsNotifications(
@@ -31,17 +34,20 @@ export class CarConsumerController {
       const heartbeat = context.getHeartbeat();
       interval = setInterval(heartbeat, 1500);
 
-      this.logger.log('Loading cars', { data });
+      this.elkLogger.log(CarConsumerController.name, 'lodaing cars', data);
 
       const providerRepository = this.providerFactory.create(data.platform);
       await providerRepository.loadCars(data.city);
 
       return { platform: data.platform, city: data.city };
     } catch (err) {
-      this.logger.error(
-        `Load cars fauled for platform ${data.platform} city ${data.city}`,
+      this.elkLogger.error(
+        CarConsumerController.name,
+        'loading cars error',
+        err,
+        LogLevel.HIGH,
       );
-      throw err;
+      return { platform: data.platform, city: data.city };
     } finally {
       if (interval) {
         clearInterval(interval);

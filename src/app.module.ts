@@ -8,7 +8,6 @@ import { PlatformsModule } from './platforms/platforms.module';
 import { CarModule } from './car/car.module';
 import { RedisModule } from './libs/redis.module';
 import { ProxyModule } from './proxy/proxy.module';
-import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -24,15 +23,6 @@ import { LoggerModule } from 'nestjs-pino';
         )}:${configService.get('MONGO_PORT')}`,
       }),
       inject: [ConfigService],
-    }),
-    LoggerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: async (config: ConfigService) => {
-        return {
-          pinoHttp: { level: config.get('DEBUG') ? 'debug' : 'info' },
-        };
-      },
     }),
     ScheduleModule.forRoot(),
     UserModule,

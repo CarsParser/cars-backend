@@ -1,20 +1,21 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { ClientKafka } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import { City, Platform } from 'src/common';
-import { BlockerFunction, blocker } from 'src/helpers';
+import { BlockerFunction, ElkLogger, blocker } from 'src/helpers';
 import Redis from 'ioredis';
+import { LogLevel } from 'src/helpers/logger';
 
 @Injectable()
 export class CarProducerService {
   private blocker?: BlockerFunction;
-  private readonly logger = new Logger(CarProducerService.name);
 
   constructor(
     @Inject('CAR_SERVICE') private client: ClientKafka,
     private configService: ConfigService,
     @Inject('REDIS') private readonly redis: Redis,
+    private elkLogger: ElkLogger,
   ) {
     if (!this.blocker) {
       this.blocker = blocker({ redis: this.redis, prefix: 'app' });
@@ -29,7 +30,12 @@ export class CarProducerService {
 
     const platforms = Object.keys(Platform);
     const cities = Object.keys(City);
-    this.logger.debug('Load cars', platforms);
+    this.elkLogger.log(
+      CarProducerService.name,
+      'sending task to load cars',
+      { platforms, cities },
+      LogLevel.LOW,
+    );
 
     for (const platform of platforms) {
       for (const city of cities) {
@@ -54,7 +60,10 @@ export class CarProducerService {
         city: city,
       })
       .subscribe(async ({ platform, city }) => {
-        this.logger.log(`Finished car loading for ${platform} city ${city}`);
+        this.elkLogger.log(CarProducerService.name, 'loaded cars', {
+          platform,
+          city,
+        });
         await unblock();
       });
   }

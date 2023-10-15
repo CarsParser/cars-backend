@@ -5,9 +5,12 @@ import { UserRepository } from './user.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './user.entity';
 import { HttpModule } from '@nestjs/axios';
+import { ConfigModule } from '@nestjs/config';
+import { ElkLogger } from 'src/helpers';
 
 @Module({
   imports: [
+    ConfigModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     HttpModule.register({
       timeout: 5000,
@@ -15,7 +18,7 @@ import { HttpModule } from '@nestjs/axios';
     }),
   ],
   controllers: [UserController],
-  providers: [UserService, UserRepository],
+  providers: [UserService, UserRepository, ElkLogger],
   exports: [UserRepository],
 })
 export class UserModule {}

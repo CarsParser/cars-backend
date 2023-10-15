@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as seleniumWebdriver from 'selenium-webdriver';
 import { By, ThenableWebDriver, WebElement, until } from 'selenium-webdriver';
@@ -19,12 +19,13 @@ import {
 } from 'src/common';
 import { Proxy, ProxyRepository } from 'src/proxy/proxy.repository';
 import * as urlLib from 'node:url';
-import { sleep } from 'src/helpers';
+import { ElkLogger, sleep } from 'src/helpers';
 import { Car } from 'src/car/car.entity';
 import { subMinutes } from 'date-fns';
 import * as numParse from 'num-parse';
 import * as Tesseract from 'tesseract.js';
 import { ProviderRepository } from '../provider.repository';
+import { LogLevel } from 'src/helpers/logger';
 
 interface AvitoPartialCar {
   url: string;
@@ -36,7 +37,6 @@ interface AvitoPartialCar {
 
 @Injectable()
 export class AvitoRepository implements ProviderRepository {
-  private readonly logger = new Logger(AvitoRepository.name);
   private avitoCityMapper: { [key in City]: string } = {
     [City.spb]: 'sankt_peterburg_i_lo',
     [City.msk]: 'moskva_i_mo',
@@ -52,44 +52,52 @@ export class AvitoRepository implements ProviderRepository {
     private configService: ConfigService,
     private proxyRepository: ProxyRepository,
     private carRepository: CarRepository,
+    private elkLogger: ElkLogger,
   ) {}
 
   async loadCars(city: City) {
     let proxy: Proxy | undefined = await this.proxyRepository.get();
-    const driver = this.initDriver(proxy);
-    try {
-      this.logger.debug(`Loading cars for avito, city ${city}`, {
-        proxy,
-      });
 
+    console.time('InitDriver');
+    const driver = this.initDriver(proxy);
+    console.timeEnd('InitDriver');
+
+    try {
+      this.elkLogger.log(AvitoRepository.name, 'loading cars', { city, proxy });
+      console.time(`PartialCarsLoad_${city}`);
       const partialCars = await this.getPartialCars(driver, city);
+      console.timeEnd(`PartialCarsLoad_${city}`);
       const partialCarsReverseOrder = partialCars.sort((a, b) => {
         return a.postUpdatedAt.getTime() - b.postUpdatedAt.getTime();
       });
-      this.logger.debug(
-        `Loading cars for avito, city ${city}`,
-        partialCars,
+      this.elkLogger.log(AvitoRepository.name, 'found partial cars', {
         partialCarsReverseOrder,
-      );
+      });
       const originalWindow = await driver.getWindowHandle();
-
+      let carNumber: number = 1;
       for (const partialCar of partialCarsReverseOrder) {
+        console.time(`loadFullCarInfo_${carNumber}`);
         const car = await this.getFullCarInfo(
           driver,
           partialCar,
           originalWindow,
         );
-        this.logger.debug(`Car loaded for avito, city ${city}`, car);
+        console.timeEnd(`loadFullCarInfo_${carNumber}`);
+        carNumber += 1;
+        this.elkLogger.log(AvitoRepository.name, 'loaded car', { car });
         await this.carRepository.save([car]);
       }
     } catch (err) {
-      this.logger.error('Error finding cars', err);
+      this.elkLogger.error(
+        AvitoRepository.name,
+        'unable to load car',
+        err,
+        LogLevel.HIGH,
+      );
       throw err;
     } finally {
       if (proxy) {
-        this.logger.debug(`Adding proxy back avito, city ${city}`, {
-          proxy,
-        });
+        this.elkLogger.log(AvitoRepository.name, 'adding proxy back', proxy);
         await this.proxyRepository.add(proxy);
       }
 
@@ -251,14 +259,17 @@ export class AvitoRepository implements ProviderRepository {
           By.css('span[class="styles-subtitle-_GzPh desktop-1760830"]'),
         )
         .getText();
-      this.logger.debug(
-        `Lowest average price = ${lowestPrice}, parsed ${numParse(
-          lowestPrice.replace(/ /g, ''),
-        )}, price ${price}`,
-      );
+      this.elkLogger.log(AvitoRepository.name, 'lowest Price', {
+        lowestPrice: numParse(lowestPrice.replace(/ /g, '')),
+      });
       return price - numParse(lowestPrice.replace(/ /g, ''));
-    } catch (e) {
-      this.logger.error('Error getting cost difference', e);
+    } catch (err) {
+      this.elkLogger.error(
+        AvitoRepository.name,
+        'unable to get cost difference',
+        err,
+        LogLevel.LOW,
+      );
     }
     return 0;
   }
@@ -281,13 +292,29 @@ export class AvitoRepository implements ProviderRepository {
       const {
         data: { text },
       } = await Tesseract.recognize(numberPict, 'eng', {
-        logger: (m) => this.logger.debug('Parse phone', m),
+        logger: (m) =>
+          this.elkLogger.log(
+            AvitoRepository.name,
+            'parse phone',
+            { m },
+            LogLevel.LOW,
+          ),
       });
       const numberString = text.replace('\n', '');
-      this.logger.debug(`Number string ${numberString}`);
+      this.elkLogger.log(
+        AvitoRepository.name,
+        'phone number string',
+        { numberString },
+        LogLevel.LOW,
+      );
       return numberString;
     } catch (err) {
-      this.logger.error(`Unable to get phone`, err);
+      this.elkLogger.error(
+        AvitoRepository.name,
+        'unable to get phone number',
+        err,
+        LogLevel.LOW,
+      );
 
       return 'UNKNOWN';
     }
@@ -298,7 +325,11 @@ export class AvitoRepository implements ProviderRepository {
     partialCar: AvitoPartialCar,
     originalWindow: string,
   ): Promise<Car> {
-    this.logger.debug(`Loading full car info for avito`, partialCar);
+    this.elkLogger.log(
+      AvitoRepository.name,
+      'getting full car info',
+      partialCar,
+    );
 
     await driver.switchTo().newWindow('tab');
     await this.getPage(driver, partialCar.url);
@@ -675,18 +706,17 @@ export class AvitoRepository implements ProviderRepository {
       const currentCarIdExists = lastProcessedCarIds.some(
         (lastProcessedCarId) => lastProcessedCarId === currentCarId,
       );
-      this.logger.debug(
-        `Last cars processed ids: ${lastProcessedCarIds.join(
-          ', ',
-        )}, current car id: ${currentCarId}`,
-        { currentCarIdExists },
-      );
+      this.elkLogger.log(AvitoRepository.name, 'current car exists', {
+        lastProcessedCarIds,
+        currentCarId,
+        currentCarIdExists,
+      });
       if (currentCarIdExists) {
         return false;
       }
     }
 
-    if (car.postUpdatedAt && car.postUpdatedAt < subMinutes(new Date(), 5)) {
+    if (car.postUpdatedAt && car.postUpdatedAt < subMinutes(new Date(), 2)) {
       return false;
     }
 
@@ -757,7 +787,12 @@ export class AvitoRepository implements ProviderRepository {
         .getAttribute('href');
       return url;
     } catch (err) {
-      this.logger.error('Unable to get url', err);
+      this.elkLogger.error(
+        AvitoRepository.name,
+        'unable to get car url',
+        err,
+        LogLevel.HIGH,
+      );
       return '';
     }
   }
@@ -767,6 +802,12 @@ export class AvitoRepository implements ProviderRepository {
     const isBlocked = await this.isBlocked(driver);
 
     if (isBlocked) {
+      this.elkLogger.error(
+        AvitoRepository.name,
+        'page blocked',
+        { url },
+        LogLevel.HIGH,
+      );
       await sleep(10_000);
 
       await driver.close();
@@ -776,7 +817,7 @@ export class AvitoRepository implements ProviderRepository {
 
   private async isBlocked(driver: ThenableWebDriver): Promise<boolean> {
     const title = await driver.getTitle();
-    this.logger.debug(`Page title ${title}`);
+    this.elkLogger.log(AvitoRepository.name, 'page title', { title });
 
     if (title.toLocaleLowerCase().includes('доступ ограничен')) {
       return true;

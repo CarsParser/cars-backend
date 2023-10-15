@@ -5,11 +5,13 @@ import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NotifierConsumerController } from './notifier.consumer.controller';
 import { CarModule } from 'src/car/car.module';
+import { ElkLogger } from 'src/helpers';
 
 @Module({
   imports: [UserModule, CarModule, ConfigModule],
   controllers: [NotifierConsumerController],
   providers: [
+    ElkLogger,
     NotifierProducerService,
     {
       provide: 'NOTIFIER_SERVICE',

@@ -6,11 +6,9 @@ import { Transport } from '@nestjs/microservices';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 import { Proxy } from './proxy/proxy.repository';
-import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useLogger(app.get(Logger));
   const configService = app.get<ConfigService>(ConfigService);
 
   // Init proxy

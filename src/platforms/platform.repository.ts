@@ -1,22 +1,28 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PlatformCreateDTO, PlatformUpdateDTO } from './dto/platform.dto';
-import { City, Platform as PlatformName } from 'src/common';
+import { Platform as PlatformName } from 'src/common';
 import { Platform } from './platform.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ElkLogger } from 'src/helpers';
+import { LogLevel } from 'src/helpers/logger';
 
 @Injectable()
 export class PlatformRepository {
-  private readonly logger = new Logger(PlatformRepository.name);
-
   constructor(
     @InjectModel(Platform.name) private platformModel: Model<Platform>,
+    private elkLogger: ElkLogger,
   ) {}
 
   async create(platformCreate: PlatformCreateDTO) {
     const platform = await this.platformModel.create(platformCreate);
 
-    this.logger.debug('Platform created', platform);
+    this.elkLogger.log(
+      PlatformRepository.name,
+      'platform created',
+      platform,
+      LogLevel.LOW,
+    );
   }
 
   async update(platformUpdate: PlatformUpdateDTO) {
@@ -25,13 +31,23 @@ export class PlatformRepository {
       platformUpdate,
     );
 
-    this.logger.debug('Platform updated', updateResults);
+    this.elkLogger.log(
+      PlatformRepository.name,
+      'platform updated',
+      updateResults,
+      LogLevel.LOW,
+    );
   }
 
   async find(): Promise<Platform[]> {
     const platforms = await this.platformModel.find().lean();
 
-    this.logger.debug('Platforms found', platforms);
+    this.elkLogger.log(
+      PlatformRepository.name,
+      'platforms found',
+      platforms,
+      LogLevel.LOW,
+    );
 
     return platforms;
   }
@@ -41,7 +57,12 @@ export class PlatformRepository {
       .findOne({ name: platformName })
       .lean();
 
-    this.logger.debug('Found platform', platform);
+    this.elkLogger.log(
+      PlatformRepository.name,
+      'platform found',
+      platform,
+      LogLevel.LOW,
+    );
 
     return platform;
   }
@@ -51,6 +72,11 @@ export class PlatformRepository {
       name: platform,
     });
 
-    this.logger.debug('Platform deleted', deleteResults);
+    this.elkLogger.log(
+      PlatformRepository.name,
+      'platform deleted',
+      deleteResults,
+      LogLevel.LOW,
+    );
   }
 }

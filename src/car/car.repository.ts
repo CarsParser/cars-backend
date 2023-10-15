@@ -1,21 +1,38 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Car } from './car.entity';
 import { Model } from 'mongoose';
 import { User } from 'src/user/user.entity';
 import { City, Platform } from 'src/common';
-import { subMinutes } from 'date-fns';
+import { differenceInMinutes, subMinutes } from 'date-fns';
+import { ElkLogger } from 'src/helpers';
+import { LogLevel } from 'src/helpers/logger';
 
 @Injectable()
 export class CarRepository {
-  private readonly logger = new Logger(CarRepository.name);
+  constructor(
+    @InjectModel(Car.name) private carModel: Model<Car>,
+    private elkLogger: ElkLogger,
+  ) {}
 
-  constructor(@InjectModel(Car.name) private carModel: Model<Car>) {}
+  async cleanCars(date: Date) {
+    const deleteResult = await this.carModel.deleteMany({
+      postedAt: {
+        $lte: date.getTime(),
+      },
+    });
+
+    this.elkLogger.log(
+      CarRepository.name,
+      'cars cleaned',
+      deleteResult,
+      LogLevel.LOW,
+    );
+  }
 
   async save(cars: Car[]) {
-    this.logger.debug('Saving cars', cars);
-
     await this.carModel.create(cars);
+    this.elkLogger.log(CarRepository.name, 'cars saved', cars, LogLevel.LOW);
   }
 
   async find(user: User): Promise<Car[]> {
@@ -24,7 +41,7 @@ export class CarRepository {
       postedAt: {
         $gte: user.lastWatchedCars?.lastWatchedCarDateTime
           ? new Date(user.lastWatchedCars?.lastWatchedCarDateTime).getTime()
-          : subMinutes(new Date(), 1),
+          : subMinutes(new Date(), 1).getTime(),
       },
       city: {
         $in: params.cities,
@@ -88,10 +105,10 @@ export class CarRepository {
         $in: params.wheels,
       },
     };
-    this.logger.debug('Cars find query', query);
+    this.elkLogger.log(CarRepository.name, 'finding cars', query, LogLevel.LOW);
     const cars = (await this.carModel.find(query).lean()) as Car[];
 
-    this.logger.debug('Found cars', cars);
+    this.elkLogger.log(CarRepository.name, 'found cars', cars, LogLevel.LOW);
 
     return cars;
   }
@@ -111,16 +128,25 @@ export class CarRepository {
       return [];
     }
 
-    this.logger.debug(
-      `City ${city} platform ${platform} last posted at ${lastCar.postedAt.toISOString()}`,
+    this.elkLogger.log(
+      CarRepository.name,
+      'finding last processed cars',
+      { city, platform, lastCar },
+      LogLevel.LOW,
     );
+
+    if (differenceInMinutes(new Date(), lastCar.postedAt) >= 5) {
+      return [];
+    }
 
     const lastProcessedCars = await this.carModel
       .find({ postedAt: lastCar.postedAt })
       .select({ postedAt: 1, url: 1 })
       .lean();
 
-    this.logger.debug(`City ${city} platform ${platform}`, {
+    this.elkLogger.log(CarRepository.name, 'found last processed cars', {
+      city,
+      platform,
       lastProcessedCars,
     });
 

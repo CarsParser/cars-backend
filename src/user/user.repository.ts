@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserDTO, UserUpdateDTO } from './dto/user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './user.entity';
@@ -17,6 +17,8 @@ import {
   Wheel,
 } from 'src/common';
 import { formatInTimeZone } from 'date-fns-tz';
+import { ElkLogger } from 'src/helpers';
+import { LogLevel } from 'src/helpers/logger';
 
 const botColor: { [key in Color]: string } = {
   [Color.white]: 'белый',
@@ -106,11 +108,10 @@ interface IFindParams {
 
 @Injectable()
 export class UserRepository {
-  private readonly logger = new Logger(UserRepository.name);
-
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     private httpService: HttpService,
+    private elkLogger: ElkLogger,
   ) {}
 
   async findUserIdsToNotify(): Promise<string[]> {
@@ -119,7 +120,12 @@ export class UserRepository {
       .select({ id: 1 })
       .lean();
     const userIds = users.map((user) => user.id);
-    this.logger.debug('User ids to notify', userIds);
+    this.elkLogger.log(
+      UserRepository.name,
+      'user ids to notify',
+      userIds,
+      LogLevel.LOW,
+    );
 
     return userIds;
   }
@@ -127,7 +133,7 @@ export class UserRepository {
   async findOne(params: IFindParams): Promise<User> {
     const user = (await this.userModel.findOne(params).lean()) as User;
 
-    this.logger.debug('Users found', user);
+    this.elkLogger.log(UserRepository.name, 'find user', user, LogLevel.LOW);
 
     return user;
   }
@@ -140,7 +146,12 @@ export class UserRepository {
     };
     const createdUser = await this.userModel.create(user);
 
-    this.logger.debug('User created', createdUser);
+    this.elkLogger.log(
+      UserRepository.name,
+      'user created',
+      createdUser,
+      LogLevel.LOW,
+    );
   }
 
   async update(user: UserUpdateDTO) {
@@ -157,11 +168,19 @@ export class UserRepository {
     }
     const updateResults = await this.userModel.updateOne({ id: user.id }, user);
 
-    this.logger.debug(`User ${user.id} updated`, updateResults);
+    this.elkLogger.log(
+      UserRepository.name,
+      'updated user',
+      updateResults,
+      LogLevel.LOW,
+    );
   }
 
   async sendTg(chatId: String, cars: Car[]) {
-    this.logger.debug(`Sending cars to chatId: ${chatId}`, cars);
+    this.elkLogger.log(UserRepository.name, 'sending cars to tg', {
+      chatId,
+      cars,
+    });
     for (const car of cars) {
       try {
         const url = `https://api.telegram.org/bot6342868231:AAHx0qLAOdfxi3ZLXy5gzH1LkGyVKRVPIns/sendPhoto?chat_id=${chatId}&photo=${
@@ -169,7 +188,12 @@ export class UserRepository {
         }&caption=${this.getTgTemplate(car)}&parse_mode=html`;
         await this.httpService.axiosRef.get(url);
       } catch (error) {
-        this.logger.error(`Unable to send car chatID:${chatId}`, error);
+        this.elkLogger.error(
+          UserRepository.name,
+          'unable to send cars to tg',
+          error,
+          LogLevel.HIGH,
+        );
       }
     }
   }
