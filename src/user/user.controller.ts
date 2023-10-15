@@ -1,7 +1,8 @@
-import { Body, Controller, Logger, Post, Put } from '@nestjs/common';
+import { Body, Controller, Post, Put } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiBody, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserDTO, UserUpdateDTO } from './dto/user.dto';
+import { ElkLogger } from 'src/helpers';
 
 @ApiTags('user')
 @ApiResponse({
@@ -11,21 +12,19 @@ import { UserDTO, UserUpdateDTO } from './dto/user.dto';
 @ApiResponse({ status: 500, description: 'Internal server error.' })
 @Controller('user')
 export class UserController {
-  private readonly logger = new Logger(UserController.name);
-
-  constructor(private userService: UserService) {}
+  constructor(private userService: UserService, private elkLogger: ElkLogger) {}
 
   @ApiBody({ type: UserDTO })
   @Post()
   async create(@Body() userCreate: UserDTO) {
-    this.logger.debug('Create user', userCreate);
+    this.elkLogger.log(UserController.name, 'creating user', userCreate)
     return this.userService.create(userCreate);
   }
 
   @ApiBody({ type: UserUpdateDTO })
   @Put()
   async update(@Body() userUpdate: UserUpdateDTO) {
-    this.logger.debug('Update user', userUpdate);
+    this.elkLogger.log(UserController.name, 'updating user', userUpdate)
     return this.userService.update(userUpdate);
   }
 }
