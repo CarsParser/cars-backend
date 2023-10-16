@@ -56,17 +56,37 @@ export class AvitoRepository implements ProviderRepository {
   ) {}
 
   async loadCars(city: City) {
+    const fullCarsLoadStart = performance.now();
     let proxy: Proxy | undefined = await this.proxyRepository.get();
+    this.elkLogger.log(AvitoRepository.name, 'loading cars', { city, proxy });
 
-    console.time('InitDriver');
+    const initDriverStart = performance.now();
     const driver = this.initDriver(proxy);
-    console.timeEnd('InitDriver');
+    const initDriverStop = performance.now();
+    const initDriverInSeconds = (initDriverStop - initDriverStart) / 1000;
+    const roundedInitDriverTime = Number(initDriverInSeconds).toFixed(3);
+    this.elkLogger.log(
+      AvitoRepository.name,
+      `init driver took ${roundedInitDriverTime}s`,
+      { time: roundedInitDriverTime },
+      LogLevel.LOW,
+    );
 
     try {
-      this.elkLogger.log(AvitoRepository.name, 'loading cars', { city, proxy });
-      console.time(`PartialCarsLoad_${city}`);
+      const partialCarLoadStart = performance.now();
       const partialCars = await this.getPartialCars(driver, city);
-      console.timeEnd(`PartialCarsLoad_${city}`);
+      const partialCarLoadStop = performance.now();
+      const partialCarLoadInSeconds =
+        (partialCarLoadStop - partialCarLoadStart) / 1000;
+      const roundedPartialCarLoadTime = Number(partialCarLoadInSeconds).toFixed(
+        3,
+      );
+      this.elkLogger.log(
+        AvitoRepository.name,
+        `partial car load took ${roundedPartialCarLoadTime}s`,
+        { time: roundedPartialCarLoadTime },
+        LogLevel.LOW,
+      );
       const partialCarsReverseOrder = partialCars.sort((a, b) => {
         return a.postUpdatedAt.getTime() - b.postUpdatedAt.getTime();
       });
@@ -74,16 +94,24 @@ export class AvitoRepository implements ProviderRepository {
         partialCarsReverseOrder,
       });
       const originalWindow = await driver.getWindowHandle();
-      let carNumber: number = 1;
+
       for (const partialCar of partialCarsReverseOrder) {
-        console.time(`loadFullCarInfo_${carNumber}`);
+        const fullCarLoadStart = performance.now();
         const car = await this.getFullCarInfo(
           driver,
           partialCar,
           originalWindow,
         );
-        console.timeEnd(`loadFullCarInfo_${carNumber}`);
-        carNumber += 1;
+        const fullCarLoadStop = performance.now();
+        const fullCarLoadInSeconds =
+          (fullCarLoadStop - fullCarLoadStart) / 1000;
+        const roundedFullCarLoadTime = Number(fullCarLoadInSeconds).toFixed(3);
+        this.elkLogger.log(
+          AvitoRepository.name,
+          `full car load took ${roundedFullCarLoadTime}s`,
+          { time: roundedFullCarLoadTime },
+          LogLevel.LOW,
+        );
         this.elkLogger.log(AvitoRepository.name, 'loaded car', { car });
         await this.carRepository.save([car]);
       }
@@ -102,6 +130,16 @@ export class AvitoRepository implements ProviderRepository {
       }
 
       await driver?.close();
+      const fullCarsLoadStop = performance.now();
+      const fullCarsLoadInSeconds =
+        (fullCarsLoadStop - fullCarsLoadStart) / 1000;
+      const roundedFullCarsLoadTime = Number(fullCarsLoadInSeconds).toFixed(3);
+      this.elkLogger.log(
+        AvitoRepository.name,
+        `full cars load took ${roundedFullCarsLoadTime}s`,
+        { time: roundedFullCarsLoadTime },
+        LogLevel.LOW,
+      );
     }
   }
 
@@ -236,6 +274,10 @@ export class AvitoRepository implements ProviderRepository {
 
   private async getImage(driver: ThenableWebDriver): Promise<string> {
     try {
+      await driver.wait(
+        until.elementLocated(By.css('div[data-marker="item-view/gallery"]')),
+        10_000,
+      );
       const galeryElement = await driver.findElement(
         By.css('div[data-marker="item-view/gallery"]'),
       );
@@ -336,7 +378,7 @@ export class AvitoRepository implements ProviderRepository {
 
     const imageUrl = await this.getImage(driver);
     const [brand, model] = await this.getBrandAndModel(driver);
-    const postedAt = await this.getPostTimestamp(driver);
+    //const postedAt = await this.getPostTimestamp(driver);
     const seller = await this.getSellerType(driver);
     const costDifference = await this.getCostDifference(
       driver,
@@ -644,7 +686,7 @@ export class AvitoRepository implements ProviderRepository {
       ownersCount,
       phone,
       platform: Platform.avito,
-      postedAt: partialCar.newAdd ? postedAt : partialCar.postUpdatedAt,
+      postedAt: partialCar.postUpdatedAt,
       price: partialCar.price,
       seller,
       transmission,
@@ -666,6 +708,10 @@ export class AvitoRepository implements ProviderRepository {
     for (let page = 1; page <= 100; page++) {
       const pageUrl = this.getUrl(city, page);
       await this.getPage(driver, pageUrl);
+      await driver.wait(
+        until.elementLocated(By.css('div[data-marker="item"]')),
+        15_000,
+      );
       const carElements = await driver.findElements(
         By.css('div[data-marker="item"]'),
       );
