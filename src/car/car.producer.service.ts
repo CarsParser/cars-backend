@@ -22,7 +22,7 @@ export class CarProducerService {
     }
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async handleCron() {
     if (!this.configService.get('HIDDEN')) {
       return;
