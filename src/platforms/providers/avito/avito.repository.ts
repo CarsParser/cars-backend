@@ -902,7 +902,8 @@ export class AvitoRepository implements ProviderRepository {
   }
 
   private initDriver(proxyObject?: Proxy): ThenableWebDriver {
-    const capabilities = seleniumWebdriver.Capabilities.chrome();
+    const capabilities =
+      seleniumWebdriver.Capabilities.chrome().setBrowserVersion('114.0');
     const options = new chrome.Options()
       .headless()
       .addArguments(
