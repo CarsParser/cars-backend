@@ -738,7 +738,7 @@ export class AvitoRepository implements ProviderRepository {
 
       for (const carElement of carElements) {
         const url = await this.getCarUrl(carElement);
-        this.elkLogger.log(AvitoRepository.name, 'partial car url', {
+        this.elkLogger.log(AvitoRepository.name, `partial car url ${url}`, {
           url,
           platform: 'avito',
           city,
@@ -751,7 +751,7 @@ export class AvitoRepository implements ProviderRepository {
         const newAdd = await this.isNewAdd(carElement);
         const newPartialCar = { url, price, postUpdatedAt, city, newAdd };
 
-        this.elkLogger.log(AvitoRepository.name, 'partial car', {
+        this.elkLogger.log(AvitoRepository.name, `partial car ${url}`, {
           newPartialCar,
           platform: 'avito',
           city,
@@ -781,17 +781,24 @@ export class AvitoRepository implements ProviderRepository {
       const currentCarIdExists = lastProcessedCarIds.some(
         (lastProcessedCarId) => lastProcessedCarId === currentCarId,
       );
-      this.elkLogger.log(AvitoRepository.name, 'current car exists', {
-        lastProcessedCarIds,
-        currentCarId,
-        currentCarIdExists,
-      });
+      this.elkLogger.log(
+        AvitoRepository.name,
+        `current car exists ${car.url}`,
+        {
+          lastProcessedCarIds,
+          currentCarId,
+          currentCarIdExists,
+        },
+      );
       if (currentCarIdExists) {
         return false;
       }
     }
 
-    if (car.postUpdatedAt && car.postUpdatedAt < subMinutes(new Date(), 2)) {
+    this.elkLogger.log(AvitoRepository.name, `current car exists ${car.url}`, {
+      car,
+    });
+    if (car.postUpdatedAt && car.postUpdatedAt < subMinutes(new Date(), 5)) {
       return false;
     }
 
