@@ -105,6 +105,9 @@ export class AvitoRepository implements ProviderRepository {
           partialCar,
           originalWindow,
         );
+        if (!car) {
+          break;
+        }
         const fullCarLoadStop = performance.now();
         const fullCarLoadInSeconds =
           (fullCarLoadStop - fullCarLoadStart) / 1000;
@@ -122,7 +125,7 @@ export class AvitoRepository implements ProviderRepository {
     } catch (err) {
       this.elkLogger.error(
         AvitoRepository.name,
-        'unable to load car',
+        'unable to load cars',
         err,
         LogLevel.HIGH,
       );
@@ -379,7 +382,10 @@ export class AvitoRepository implements ProviderRepository {
     );
 
     await driver.switchTo().newWindow('tab');
-    await this.getPage(driver, partialCar.url);
+    const isBlocked = await this.getPage(driver, partialCar.url);
+    if (isBlocked) {
+      return null;
+    }
 
     const imageUrl = await this.getImage(driver);
     const [brand, model] = await this.getBrandAndModel(driver);
@@ -712,7 +718,11 @@ export class AvitoRepository implements ProviderRepository {
     const partialCars: AvitoPartialCar[] = [];
     for (let page = 1; page <= 100; page++) {
       const pageUrl = this.getUrl(city, page);
-      await this.getPage(driver, pageUrl);
+      const isBlocked = await this.getPage(driver, pageUrl);
+      if (isBlocked) {
+        return partialCars;
+      }
+
       await driver.wait(
         until.elementLocated(By.css('div[data-marker="item"]')),
         15_000,
@@ -850,7 +860,10 @@ export class AvitoRepository implements ProviderRepository {
     }
   }
 
-  private async getPage(driver: ThenableWebDriver, url: string) {
+  private async getPage(
+    driver: ThenableWebDriver,
+    url: string,
+  ): Promise<boolean> {
     await driver.get(url);
     const isBlocked = await this.isBlocked(driver);
 
@@ -863,6 +876,7 @@ export class AvitoRepository implements ProviderRepository {
       );
       await sleep(10000);
     }
+    return isBlocked;
   }
 
   private async isBlocked(driver: ThenableWebDriver): Promise<boolean> {
@@ -895,7 +909,6 @@ export class AvitoRepository implements ProviderRepository {
         '--no-sandbox',
         'start-maximized',
         '--disable-blink-features=AutomationControlled',
-        `--user-agent=${ua.toString()}`,
       );
 
     // Init driver
