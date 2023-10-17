@@ -62,7 +62,7 @@ export enum BackType {
   offroadFiveDoors = 'offroadFiveDoors',
   universal = 'universal',
   hatchbackThreeDoors = 'hatchbackThreeDoors',
-  hatchbackFiveDoors = 'hatchbcakFiveDoors',
+  hatchbackFiveDoors = 'hatchbackFiveDoors',
   coupe = 'coupe',
   minivan = 'minivan',
   minibus = 'minibus',
