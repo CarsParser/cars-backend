@@ -26,7 +26,7 @@ import * as numParse from 'num-parse';
 import * as Tesseract from 'tesseract.js';
 import { ProviderRepository } from '../provider.repository';
 import { LogLevel } from 'src/helpers/logger';
-import UserAgent from 'user-agents';
+import * as UserAgent from 'user-agents';
 
 const ua = new UserAgent();
 
