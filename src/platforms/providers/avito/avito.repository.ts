@@ -120,7 +120,8 @@ export class AvitoRepository implements ProviderRepository {
         );
         this.elkLogger.log(AvitoRepository.name, 'loaded car', { car });
         await this.carRepository.save([car]);
-        await sleep(10000);
+        const sleepTime = this.configService.get('SLEEP_TIME');
+        await sleep(sleepTime ? Number(sleepTime) : 5_000);
       }
     } catch (err) {
       this.elkLogger.error(
@@ -752,7 +753,8 @@ export class AvitoRepository implements ProviderRepository {
         partialCars.push(newPartialCar);
       }
 
-      await sleep(10000);
+      const sleepTime = this.configService.get('SLEEP_TIME');
+      await sleep(sleepTime ? Number(sleepTime) : 5_000);
     }
   }
 
@@ -874,7 +876,8 @@ export class AvitoRepository implements ProviderRepository {
         { url },
         LogLevel.HIGH,
       );
-      await sleep(10000);
+      const sleepTime = this.configService.get('SLEEP_TIME');
+      await sleep(sleepTime ? Number(sleepTime) : 5_000);
     }
     return isBlocked;
   }
@@ -902,8 +905,9 @@ export class AvitoRepository implements ProviderRepository {
   }
 
   private initDriver(proxyObject?: Proxy): ThenableWebDriver {
-    const capabilities =
-      seleniumWebdriver.Capabilities.chrome().setBrowserVersion('114.0');
+    const capabilities = seleniumWebdriver.Capabilities.chrome()
+      .setBrowserVersion('114.0')
+      .setPageLoadStrategy('eager');
     const options = new chrome.Options()
       .headless()
       .addArguments(

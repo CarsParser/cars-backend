@@ -41,7 +41,7 @@ export class ProxyRepository {
         break;
       }
 
-      await sleep(1000);
+      await sleep(3_000);
     }
 
     return proxy ? JSON.parse(proxy) : undefined;
