@@ -38,6 +38,12 @@ export class CarRepository {
   async find(user: User): Promise<Car[]> {
     const { config: params } = user;
     const query = {
+      postedAt: {
+        $gte: subMinutes(
+          new Date(user.lastWatchedCars?.lastWatchedCarDateTime),
+          2,
+        ).getTime(),
+      },
       city: {
         $in: params.cities,
       },
@@ -50,7 +56,6 @@ export class CarRepository {
       model: {
         $in: params.models,
       },
-      newAdd: params.newAdds,
       url: {
         $nin: user.lastWatchedCars.lastWatchedCarIds,
       },
@@ -103,8 +108,11 @@ export class CarRepository {
         $in: params.wheels,
       },
     };
-    this.elkLogger.log(CarRepository.name, 'finding cars', query, LogLevel.LOW);
+    if (params.newAdds) {
+      query['newAdd'] = true;
+    }
     const cars = (await this.carModel.find(query).lean()) as Car[];
+    this.elkLogger.log(CarRepository.name, 'finding cars', query, LogLevel.LOW);
 
     this.elkLogger.log(CarRepository.name, 'found cars', cars, LogLevel.LOW);
 
