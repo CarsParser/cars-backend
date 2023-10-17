@@ -26,6 +26,9 @@ import * as numParse from 'num-parse';
 import * as Tesseract from 'tesseract.js';
 import { ProviderRepository } from '../provider.repository';
 import { LogLevel } from 'src/helpers/logger';
+import UserAgent from 'user-agents';
+
+const ua = new UserAgent();
 
 interface AvitoPartialCar {
   url: string;
@@ -886,11 +889,12 @@ export class AvitoRepository implements ProviderRepository {
   private initDriver(proxyObject?: Proxy): ThenableWebDriver {
     const capabilities = seleniumWebdriver.Capabilities.chrome();
     const options = new chrome.Options()
-      .headless()
+      //.headless()
       .addArguments(
         '--no-sandbox',
         'start-maximized',
         '--disable-blink-features=AutomationControlled',
+        `user-agent=${ua.toString()}`,
       );
 
     // Init driver
@@ -898,7 +902,7 @@ export class AvitoRepository implements ProviderRepository {
     const chromeServerPort = this.configService.get('CHROME_PORT');
     const driverBuilder = new seleniumWebdriver.Builder()
       .forBrowser('chrome')
-      .usingServer(`http://${chromeServerHost}:${chromeServerPort}`)
+      .usingServer(`http://${chromeServerHost}:${chromeServerPort}/wd/hub`)
       .withCapabilities(capabilities)
       .setChromeOptions(options);
 
