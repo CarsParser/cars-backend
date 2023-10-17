@@ -133,6 +133,7 @@ export class AvitoRepository implements ProviderRepository {
       }
 
       await driver?.close();
+      await driver?.quit();
       const fullCarsLoadStop = performance.now();
       const fullCarsLoadInSeconds =
         (fullCarsLoadStop - fullCarsLoadStart) / 1000;
@@ -889,7 +890,7 @@ export class AvitoRepository implements ProviderRepository {
   private initDriver(proxyObject?: Proxy): ThenableWebDriver {
     const capabilities = seleniumWebdriver.Capabilities.chrome();
     const options = new chrome.Options()
-      //.headless()
+      .headless()
       .addArguments(
         '--no-sandbox',
         'start-maximized',
