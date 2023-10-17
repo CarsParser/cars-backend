@@ -120,7 +120,7 @@ export class AvitoRepository implements ProviderRepository {
         );
         this.elkLogger.log(AvitoRepository.name, 'loaded car', { car });
         await this.carRepository.save([car]);
-        await sleep(5000);
+        await sleep(10000);
       }
     } catch (err) {
       this.elkLogger.error(
@@ -752,7 +752,7 @@ export class AvitoRepository implements ProviderRepository {
         partialCars.push(newPartialCar);
       }
 
-      await sleep(5000);
+      await sleep(10000);
     }
   }
 

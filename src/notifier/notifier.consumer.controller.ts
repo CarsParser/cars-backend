@@ -29,66 +29,53 @@ export class NotifierConsumerController {
       this.elkLogger.log(
         NotifierConsumerController.name,
         'notify user',
-        user,
+        { id: user.id, lastWatchedCars: user.lastWatchedCars },
         LogLevel.MEDIUM,
       );
 
       const carsToOffer = await this.carsRepository.find(user);
-      let carsToOfferFiltered: Car[] = JSON.parse(JSON.stringify(carsToOffer));
 
       this.elkLogger.log(NotifierConsumerController.name, 'cars to offer', {
         carsToOffer,
-        user,
+        id: user.id,
+        lastWatchedCars: user.lastWatchedCars,
       });
 
       if (carsToOffer.length) {
-        if (user.lastWatchedCars?.lastWatchedCarIds?.length) {
-          carsToOfferFiltered = carsToOffer.filter(
-            (car) => !user.lastWatchedCars.lastWatchedCarIds.includes(car.url),
-          );
-        }
+        await this.userRepository.sendTg(user.id, carsToOffer);
+
+        const lastWatchedCarDateTime = carsToOffer.sort((a, b) => {
+          if (!b.postedAt) {
+            return -1;
+          }
+          if (!a.postedAt) {
+            return 1;
+          }
+          return b.postedAt.getTime() - a.postedAt.getTime();
+        })[0].postedAt;
+        const lastWatchedCarIds = carsToOffer.map((car) => car.url);
+        user.lastWatchedCars = {
+          lastWatchedCarDateTime,
+          lastWatchedCarIds: [
+            ...new Set([
+              ...lastWatchedCarIds,
+              ...user.lastWatchedCars.lastWatchedCarIds,
+            ]),
+          ],
+        };
         this.elkLogger.log(
           NotifierConsumerController.name,
-          'filtered cars to offer',
+          'user last watched cars',
           {
-            carsToOfferFiltered,
-            user,
+            lastWatchedCars: user.lastWatchedCars,
           },
         );
-
-        if (carsToOfferFiltered.length) {
-          await this.userRepository.sendTg(user.id, carsToOfferFiltered);
-
-          const lastWatchedCarDateTime = carsToOffer.sort((a, b) => {
-            if (!b.postedAt) {
-              return -1;
-            }
-            if (!a.postedAt) {
-              return 1;
-            }
-            return b.postedAt.getTime() - a.postedAt.getTime();
-          })[0].postedAt;
-          const lastWatchedCarIds = carsToOffer
-            .filter((car) => isEqual(car.postedAt, lastWatchedCarDateTime))
-            .map((car) => car.url);
-          user.lastWatchedCars = {
-            lastWatchedCarDateTime,
-            lastWatchedCarIds,
-          };
-          this.elkLogger.log(
-            NotifierConsumerController.name,
-            'user last watched cars',
-            {
-              lastWatchedCars: user.lastWatchedCars,
-            },
-          );
-          await this.userRepository.update(user);
-        }
+        await this.userRepository.update(user);
       }
 
       return {
         userId: user.id,
-        sentCarIds: carsToOfferFiltered.map((car) => car.url),
+        sentCarIds: carsToOffer.map((car) => car.url),
       };
     } catch (err) {
       this.elkLogger.error(

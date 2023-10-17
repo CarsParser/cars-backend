@@ -38,11 +38,6 @@ export class CarRepository {
   async find(user: User): Promise<Car[]> {
     const { config: params } = user;
     const query = {
-      postedAt: {
-        $gte: user.lastWatchedCars?.lastWatchedCarDateTime
-          ? new Date(user.lastWatchedCars?.lastWatchedCarDateTime).getTime()
-          : subMinutes(new Date(), 1).getTime(),
-      },
       city: {
         $in: params.cities,
       },
@@ -56,6 +51,9 @@ export class CarRepository {
         $in: params.models,
       },
       newAdd: params.newAdds,
+      url: {
+        $nin: user.lastWatchedCars.lastWatchedCarIds,
+      },
       price: {
         $gte: params.price.min,
         $lte: params.price.max,
