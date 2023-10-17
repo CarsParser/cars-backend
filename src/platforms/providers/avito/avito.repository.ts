@@ -738,6 +738,11 @@ export class AvitoRepository implements ProviderRepository {
 
       for (const carElement of carElements) {
         const url = await this.getCarUrl(carElement);
+        this.elkLogger.log(AvitoRepository.name, 'partial car url', {
+          url,
+          platform: 'avito',
+          city,
+        });
         if (!url) {
           return partialCars;
         }
@@ -746,6 +751,11 @@ export class AvitoRepository implements ProviderRepository {
         const newAdd = await this.isNewAdd(carElement);
         const newPartialCar = { url, price, postUpdatedAt, city, newAdd };
 
+        this.elkLogger.log(AvitoRepository.name, 'partial car', {
+          newPartialCar,
+          platform: 'avito',
+          city,
+        });
         if (!this.isNewCar(lastProcessedCars, newPartialCar)) {
           return partialCars;
         }
