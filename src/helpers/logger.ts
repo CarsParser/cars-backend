@@ -20,6 +20,7 @@ export class ElkLogger {
     payload: any = {},
     log_level: LogLevel = LogLevel.MEDIUM,
   ) {
+    return;
     const logObject = {
       service_name,
       logger_type: 'SERVICE_LOGGER',

@@ -12,6 +12,7 @@ import { ProxyModule } from 'src/proxy/proxy.module';
 import { City } from 'src/common';
 import { CarsCleanerService } from './cars.cleaner.service';
 import { ElkLogger } from 'src/helpers';
+import { CarController } from './car.controller';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { ElkLogger } from 'src/helpers';
     ProxyModule,
     ConfigModule,
   ],
-  controllers: [CarConsumerController],
+  controllers: [CarConsumerController, CarController],
   providers: [
     ElkLogger,
     CarRepository,
