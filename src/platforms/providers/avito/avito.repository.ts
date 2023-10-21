@@ -19,7 +19,9 @@ export class AvitoRepository implements ProviderRepository {
       city,
       Platform.avito,
     );
-    const loadedCars = await this.httpService.axiosRef.post<Car[]>(
+    const loadedCars = await this.httpService.axiosRef.post<{
+      loadedCars: Car[];
+    }>(
       `http://${this.configService.get(
         'AVITO_PARSER_HOST',
       )}:${this.configService.get('AVITO_PARSER_PORT')}/load-cars`,
@@ -28,6 +30,9 @@ export class AvitoRepository implements ProviderRepository {
         lastProcessedCars,
       },
     );
-    console.log('Loaded cars: ', loadedCars.data?.map((car) => car.url));
+    console.log(
+      'Loaded cars: ',
+      loadedCars.data?.loadedCars?.map((car) => car.url),
+    );
   }
 }
