@@ -45,10 +45,10 @@ import { CarController } from './car.controller';
                       case City.spb: {
                         return 0;
                       }
-                      case City.arkh: {
+                      case City.bashkortostan: {
                         return 1;
                       }
-                      case City.ekb: {
+                      case City.chelyabinsk: {
                         return 2;
                       }
                       case City.kazan: {
@@ -57,7 +57,7 @@ import { CarController } from './car.controller';
                       case City.msk: {
                         return 4;
                       }
-                      case City.omsk: {
+                      case City.dagestan: {
                         return 5;
                       }
                       case City.rostov: {
@@ -65,6 +65,15 @@ import { CarController } from './car.controller';
                       }
                       case City.samara: {
                         return 7;
+                      }
+                      case City.krasnodar: {
+                        return 8;
+                      }
+                      case City.nizhniy: {
+                        return 9;
+                      }
+                      case City.sverdlovsk: {
+                        return 10;
                       }
                     }
                   }

@@ -7,12 +7,15 @@ export enum Platform {
 export enum City {
   spb = 'spb',
   msk = 'msk',
-  samara = 'samara',
-  ekb = 'ekb',
-  arkh = 'arkh',
+  krasnodar = 'krasnodar',
+  sverdlovsk = 'sverdlovsk',
   rostov = 'rostov',
-  omsk = 'omsk',
+  bashkortostan = 'bashkortostan',
   kazan = 'kazan',
+  chelyabinsk = 'chelyabinsk',
+  dagestan = 'dagestan',
+  samara = 'samara',
+  nizhniy = 'nizhniy',
 }
 
 export enum Transmission {
