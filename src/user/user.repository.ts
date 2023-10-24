@@ -95,11 +95,14 @@ const botCity: { [key in City]: string } = {
   [City.spb]: 'Санкт-Петербург',
   [City.msk]: 'Москва',
   [City.samara]: 'Самара',
-  [City.ekb]: 'Екатеринбург',
-  [City.arkh]: 'Архангельск',
   [City.rostov]: 'Ростов',
-  [City.omsk]: 'Омск',
   [City.kazan]: 'Казань',
+  [City.krasnodar]: 'Краснодар',
+  [City.sverdlovsk]: 'Свердловск',
+  [City.bashkortostan]: 'Республика Башкортостан',
+  [City.chelyabinsk]: 'Челябинск',
+  [City.dagestan]: 'Дагестан',
+  [City.nizhniy]: 'Нижний Новгород',
 };
 
 interface IFindParams {
