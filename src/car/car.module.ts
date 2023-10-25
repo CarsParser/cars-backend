@@ -48,13 +48,13 @@ import { CarController } from './car.controller';
                       case City.bashkortostan: {
                         return 1;
                       }
-                      case City.chelyabinsk: {
+                      case City.msk: {
                         return 2;
                       }
                       case City.kazan: {
                         return 3;
                       }
-                      case City.msk: {
+                      case City.chelyabinsk: {
                         return 4;
                       }
                       case City.dagestan: {
