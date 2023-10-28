@@ -4,7 +4,7 @@ import { CarRepository } from 'src/car/car.repository';
 import { UserRepository } from '../user/user.repository';
 import { ElkLogger } from 'src/helpers';
 import { LogLevel } from 'src/helpers/logger';
-import _ from 'lodash';
+import * as _ from 'lodash';
 
 @Controller('notification-consumer')
 export class NotifierConsumerController {
