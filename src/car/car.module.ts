@@ -45,10 +45,10 @@ import { CarController } from './car.controller';
                       case City.spb: {
                         return 0;
                       }
-                      case City.bashkortostan: {
+                      case City.msk: {
                         return 1;
                       }
-                      case City.msk: {
+                      case City.bashkortostan: {
                         return 2;
                       }
                       case City.kazan: {
