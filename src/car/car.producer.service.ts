@@ -52,7 +52,7 @@ export class CarProducerService {
 
   send(
     { platform, city }: { platform: string; city: string },
-    unblock: () => Promise<void>,
+    unblock: (key: string) => Promise<void>,
   ) {
     this.client
       .send('load_cars', {
@@ -64,7 +64,7 @@ export class CarProducerService {
           platform,
           city,
         });
-        await unblock();
+        await unblock(`load_cars_${platform}_${city}`);
       });
   }
 

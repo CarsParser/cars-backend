@@ -1,12 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
 import { CarRepository } from 'src/car/car.repository';
-import { User } from 'src/user/user.entity';
 import { UserRepository } from '../user/user.repository';
-import { Car } from 'src/car/car.entity';
-import { isEqual } from 'date-fns';
 import { ElkLogger } from 'src/helpers';
 import { LogLevel } from 'src/helpers/logger';
+import _ from 'lodash';
 
 @Controller('notification-consumer')
 export class NotifierConsumerController {
@@ -40,11 +38,12 @@ export class NotifierConsumerController {
         id: user.id,
         lastWatchedCars: user.lastWatchedCars,
       });
+      const uniqCars = _.uniqBy(carsToOffer, 'url');
 
-      if (carsToOffer.length) {
-        await this.userRepository.sendTg(user.id, carsToOffer);
+      if (uniqCars.length) {
+        await this.userRepository.sendTg(user.id, uniqCars);
 
-        const lastWatchedCarDateTime = carsToOffer.sort((a, b) => {
+        const lastWatchedCarDateTime = uniqCars.sort((a, b) => {
           if (!b.postedAt) {
             return -1;
           }
@@ -53,7 +52,7 @@ export class NotifierConsumerController {
           }
           return b.postedAt.getTime() - a.postedAt.getTime();
         })[0].postedAt;
-        const lastWatchedCarIds = carsToOffer.map((car) => car.url);
+        const lastWatchedCarIds = uniqCars.map((car) => car.url);
         user.lastWatchedCars = {
           lastWatchedCarDateTime,
           lastWatchedCarIds: [
@@ -75,7 +74,7 @@ export class NotifierConsumerController {
 
       return {
         userId: user.id,
-        sentCarIds: carsToOffer.map((car) => car.url),
+        sentCarIds: uniqCars.map((car) => car.url),
       };
     } catch (err) {
       this.elkLogger.error(

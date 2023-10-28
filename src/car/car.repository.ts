@@ -41,7 +41,7 @@ export class CarRepository {
       postedAt: {
         $gte: subMinutes(
           new Date(user.lastWatchedCars?.lastWatchedCarDateTime),
-          2,
+          20,
         ).getTime(),
       },
       city: {

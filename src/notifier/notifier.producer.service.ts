@@ -40,13 +40,13 @@ export class NotifierProducerService {
 
     for (const userId of userIds) {
       try {
-        const unblock = await this.blocker(`notify_${userId}`, 60);
+        const unblock = await this.blocker(`notify_${userId}`, 80);
         this.send({ id: userId }, unblock);
       } catch (err) {}
     }
   }
 
-  send(data: { id: string }, unblock: () => Promise<void>) {
+  send(data: { id: string }, unblock: (key: string) => Promise<void>) {
     this.client
       .send('cars_notification', data)
       .subscribe(async ({ userId, sentCarIds }) => {
@@ -54,7 +54,7 @@ export class NotifierProducerService {
           userId,
           sentCarIds,
         });
-        await unblock();
+        await unblock(`notify_${userId}`);
       });
   }
 

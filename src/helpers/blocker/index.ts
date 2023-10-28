@@ -19,7 +19,7 @@ export class Blocker {
   public async block(
     key: string,
     options: BlockOptions = {},
-  ): Promise<(() => Promise<void>) | undefined> {
+  ): Promise<((key: string) => Promise<void>) | undefined> {
     const { time = 60, extendInterval, extendTime = time } = options;
 
     const redisKey = this.getBlockKey(key);
@@ -51,8 +51,8 @@ export class Blocker {
       this.intervals.set(key, interval);
     }
 
-    return async () => {
-      await this.unblock(key);
+    return async (k: string) => {
+      await this.unblock(k);
     };
   }
 
@@ -87,7 +87,7 @@ export class Blocker {
 export type BlockerFunction = (
   key: string,
   time: number,
-) => Promise<() => Promise<void>>;
+) => Promise<(key: string) => Promise<void>>;
 
 /**
  * Blocker function
