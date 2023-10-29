@@ -12,19 +12,22 @@ import { ElkLogger } from 'src/helpers';
 @ApiResponse({ status: 500, description: 'Internal server error.' })
 @Controller('user')
 export class UserController {
-  constructor(private userService: UserService, private elkLogger: ElkLogger) {}
+  constructor(
+    private userService: UserService,
+    private elkLogger: ElkLogger,
+  ) {}
 
   @ApiBody({ type: UserDTO })
   @Post()
   async create(@Body() userCreate: UserDTO) {
-    this.elkLogger.log(UserController.name, 'creating user', userCreate)
+    this.elkLogger.log(UserController.name, 'creating user', userCreate);
     return this.userService.create(userCreate);
   }
 
   @ApiBody({ type: UserUpdateDTO })
   @Put()
   async update(@Body() userUpdate: UserUpdateDTO) {
-    this.elkLogger.log(UserController.name, 'updating user', userUpdate)
+    this.elkLogger.log(UserController.name, 'updating user', userUpdate);
     return this.userService.update(userUpdate);
   }
 }

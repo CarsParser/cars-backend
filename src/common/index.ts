@@ -94,3 +94,8 @@ export enum Color {
   purple = 'purple',
   pink = 'pink',
 }
+
+export type CheapCar = Pick<
+  Car,
+  'brand' | 'model' | 'price' | 'url' | 'costDifference'
+>;
