@@ -13,6 +13,7 @@ import { City } from 'src/common';
 import { CarsCleanerService } from './cars.cleaner.service';
 import { ElkLogger } from 'src/helpers';
 import { CarController } from './car.controller';
+import { ClientModule } from '../client/client.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { CarController } from './car.controller';
     PlatformsModule,
     ProxyModule,
     ConfigModule,
+    ClientModule,
   ],
   controllers: [CarConsumerController, CarController],
   providers: [

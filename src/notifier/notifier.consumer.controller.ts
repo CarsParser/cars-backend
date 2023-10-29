@@ -5,6 +5,7 @@ import { UserRepository } from '../user/user.repository';
 import { ElkLogger } from 'src/helpers';
 import { LogLevel } from 'src/helpers/logger';
 import * as _ from 'lodash';
+import { TgService } from '../client/tg/tg.service';
 
 @Controller('notification-consumer')
 export class NotifierConsumerController {
@@ -12,6 +13,7 @@ export class NotifierConsumerController {
     private carsRepository: CarRepository,
     private userRepository: UserRepository,
     private elkLogger: ElkLogger,
+    private tgService: TgService,
   ) {}
 
   @MessagePattern('cars_notification', Transport.KAFKA)
@@ -41,7 +43,7 @@ export class NotifierConsumerController {
       const uniqCars = _.uniqBy(carsToOffer, 'url');
 
       if (uniqCars.length) {
-        await this.userRepository.sendTg(user.id, uniqCars);
+        await this.tgService.sendCars(user.id, uniqCars);
 
         const lastWatchedCarDateTime = uniqCars.sort((a, b) => {
           if (!b.postedAt) {

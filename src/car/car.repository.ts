@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Car } from './car.entity';
 import { Model } from 'mongoose';
 import { User } from 'src/user/user.entity';
-import { City, Platform } from 'src/common';
+import { CheapCar, City, Platform } from 'src/common';
 import { differenceInMinutes, subMinutes } from 'date-fns';
 import { ElkLogger } from 'src/helpers';
 import { LogLevel } from 'src/helpers/logger';
@@ -157,5 +157,11 @@ export class CarRepository {
     });
 
     return lastProcessedCars;
+  }
+  async findCheap(): Promise<CheapCar[]> {
+    return this.carModel
+      .find({ costDifference: { $lt: 0 } })
+      .select({ brand: 1, model: 1, price: 1, url: 1, costDifference: 1 })
+      .lean();
   }
 }
