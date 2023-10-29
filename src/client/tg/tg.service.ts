@@ -113,20 +113,24 @@ export class TgService {
       chatId,
       cars,
     });
+    const sendPromises = [];
+
     for (const car of cars) {
-      try {
-        const url = `https://api.telegram.org/bot6342868231:AAHx0qLAOdfxi3ZLXy5gzH1LkGyVKRVPIns/sendPhoto?chat_id=${chatId}&photo=${
-          car.imageUrl
-        }&caption=${this.getTemplate(car)}&parse_mode=html`;
-        await this.httpService.axiosRef.get(url);
-      } catch (error) {
-        this.elkLogger.error(
-          UserRepository.name,
-          'unable to send cars to tg',
-          error,
-          LogLevel.HIGH,
-        );
-      }
+      const url = `https://api.telegram.org/bot6342868231:AAHx0qLAOdfxi3ZLXy5gzH1LkGyVKRVPIns/sendPhoto?chat_id=${chatId}&photo=${
+        car.imageUrl
+      }&caption=${this.getTemplate(car)}&parse_mode=html`;
+      sendPromises.push(this.httpService.axiosRef.get(url));
+    }
+
+    try {
+      await Promise.allSettled(sendPromises);
+    } catch (error) {
+      this.elkLogger.error(
+        UserRepository.name,
+        'unable to send cars to tg',
+        error,
+        LogLevel.HIGH,
+      );
     }
   }
 
@@ -175,6 +179,7 @@ export class TgService {
 
     return template;
   }
+
   async sendCheapCars(cars: CheapCar[]) {
     const templates = await this.getCheapTemplate(cars);
     for (const template of templates) {
