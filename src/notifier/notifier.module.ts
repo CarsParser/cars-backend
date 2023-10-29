@@ -6,9 +6,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NotifierConsumerController } from './notifier.consumer.controller';
 import { CarModule } from 'src/car/car.module';
 import { ElkLogger } from 'src/helpers';
+import { ClientModule } from '../client/client.module';
 
 @Module({
-  imports: [UserModule, CarModule, ConfigModule],
+  imports: [UserModule, CarModule, ConfigModule, ClientModule],
   controllers: [NotifierConsumerController],
   providers: [
     ElkLogger,

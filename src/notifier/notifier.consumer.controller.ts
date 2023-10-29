@@ -1,12 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload, Transport } from '@nestjs/microservices';
 import { CarRepository } from 'src/car/car.repository';
-import { User } from 'src/user/user.entity';
 import { UserRepository } from '../user/user.repository';
-import { Car } from 'src/car/car.entity';
-import { isEqual } from 'date-fns';
 import { ElkLogger } from 'src/helpers';
 import { LogLevel } from 'src/helpers/logger';
+import { TgService } from '../client/tg/tg.service';
 
 @Controller('notification-consumer')
 export class NotifierConsumerController {
@@ -14,6 +12,7 @@ export class NotifierConsumerController {
     private carsRepository: CarRepository,
     private userRepository: UserRepository,
     private elkLogger: ElkLogger,
+    private tgService: TgService,
   ) {}
 
   @MessagePattern('cars_notification', Transport.KAFKA)
@@ -42,7 +41,7 @@ export class NotifierConsumerController {
       });
 
       if (carsToOffer.length) {
-        await this.userRepository.sendTg(user.id, carsToOffer);
+        await this.tgService.sendCars(user.id, carsToOffer);
 
         const lastWatchedCarDateTime = carsToOffer.sort((a, b) => {
           if (!b.postedAt) {
